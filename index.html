@@ -5,11 +5,14 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>푸드뱅크 통합 배송 & 특이사항 플래너</title>
 
+    <!-- PWABuilder 웹앱 매니페스트 연결 -->
     <link rel="manifest" href="manifest.json">
+
+    <!-- Tailwind CSS CDN -->
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Pretendard:wght@400;600;700&display=swap" rel="stylesheet">
     
-    <!-- Firebase SDK -->
+    <!-- Firebase SDK (v9 호환 모듈) -->
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
 
@@ -27,27 +30,24 @@
         <header class="bg-emerald-600 text-white p-5 rounded-2xl shadow-md mb-5 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
             <div>
                 <h1 class="text-2xl font-bold">🚚 푸드뱅크 실시간 스마트 관리</h1>
-                <p class="text-emerald-100 text-xs mt-1">전직원 실시간 동기화 주간 배송지 및 스마트 동선 플래너</p>
+                <p class="text-emerald-100 text-xs mt-1">전직원 실시간 동기화 주간 배송지, 지도 동선 & 길안내 통합 플래너</p>
             </div>
             <div id="header-badge" class="bg-emerald-700 px-4 py-2 rounded-xl text-xs font-semibold">
                 진행률: 0 / 0건 (0%)
             </div>
         </header>
 
-        <!-- 메인 탭 -->
+        <!-- 메인 탭 (배송 업무 통합 뷰 vs 특이사항 캘린더) -->
         <div class="flex gap-2 mb-6 bg-slate-200 p-1.5 rounded-2xl">
-            <button type="button" onclick="switchMainTab('delivery')" id="main-tab-delivery" class="flex-1 py-3 rounded-xl font-bold text-xs sm:text-sm text-center transition bg-white text-emerald-700 shadow-sm">
-                🚛 주간 배송 목록
+            <button type="button" onclick="switchMainTab('delivery')" id="main-tab-delivery" class="flex-1 py-3 rounded-xl font-bold text-sm text-center transition bg-white text-emerald-700 shadow-sm">
+                🚛 주간 배송 & 실시간 지도 동선
             </button>
-            <button type="button" onclick="switchMainTab('map')" id="main-tab-map" class="flex-1 py-3 rounded-xl font-bold text-xs sm:text-sm text-center transition text-slate-600 hover:text-slate-900">
-                🗺️ 지도 동선 현황
-            </button>
-            <button type="button" onclick="switchMainTab('calendar')" id="main-tab-calendar" class="flex-1 py-3 rounded-xl font-bold text-xs sm:text-sm text-center transition text-slate-600 hover:text-slate-900">
-                📅 배송 특이사항
+            <button type="button" onclick="switchMainTab('calendar')" id="main-tab-calendar" class="flex-1 py-3 rounded-xl font-bold text-sm text-center transition text-slate-600 hover:text-slate-900">
+                📅 배송 특이사항 (캘린더)
             </button>
         </div>
 
-        <!-- ==================== 1. 주간 배송 섹션 ==================== -->
+        <!-- ==================== 1. 주간 배송 & 지도 통합 섹션 ==================== -->
         <div id="section-delivery" class="flex flex-col gap-5">
             <!-- 요일 선택 탭 -->
             <div class="flex gap-2">
@@ -58,110 +58,97 @@
                 <button type="button" onclick="changeDay('금')" id="tab-금" class="day-btn flex-1 py-3 rounded-xl font-bold text-sm bg-white text-slate-600 shadow-sm border border-slate-200">금</button>
             </div>
 
-            <div class="flex flex-col gap-5">
-                <!-- 다음 목적지 요약 배너 -->
-                <div id="next-target-banner" class="bg-emerald-50 border border-emerald-200 p-4 rounded-2xl flex justify-between items-center hidden">
-                    <div>
-                        <span class="text-xs text-emerald-600 font-bold">📍 다음 배송 목적지</span>
-                        <h3 id="next-target-name" class="text-base font-bold text-slate-800">배송처 이름</h3>
-                        <p id="next-target-addr" class="text-xs text-slate-500">주소 정보</p>
-                    </div>
-                    <button type="button" id="next-target-navi-btn" class="bg-emerald-600 text-white font-bold text-xs px-4 py-2.5 rounded-xl shadow-sm hover:bg-emerald-700 transition">
-                        🚀 카카오내비
-                    </button>
-                </div>
-
-                <!-- 1) 배송 목록 (위쪽) -->
-                <div class="bg-white p-5 rounded-2xl shadow-sm border border-slate-200">
-                    <div class="flex justify-between items-center border-b pb-2 mb-4">
-                        <h2 class="text-base font-bold text-slate-800">
-                            <span id="title-day" class="text-emerald-600">월요일</span> 배송 목록 (<span id="count-num">0</span>건)
-                        </h2>
-                        <span class="text-xs text-slate-400">⚡ 순서 변경 및 실시간 공유 가능</span>
-                    </div>
-                    <div id="list-container" class="flex flex-col gap-3 max-h-[600px] overflow-y-auto pr-1"></div>
-                </div>
-
-                <!-- 2) 자주 가는 배송지(공유 풀)에서 원클릭 추가 -->
-                <div class="bg-white p-5 rounded-2xl shadow-sm border border-slate-200 flex flex-col gap-3">
-                    <h2 class="text-base font-bold text-slate-800 border-b pb-2 flex justify-between items-center">
-                        <span>⭐ 자주 가는 배송지 모음 (클릭해서 동선에 추가)</span>
-                        <span class="text-xs text-slate-400">전 직원 공용 풀</span>
-                    </h2>
-                    <div id="favorites-container" class="grid grid-cols-1 sm:grid-cols-2 gap-2 max-h-[200px] overflow-y-auto pr-1">
-                        <!-- 동적으로 로드됨 -->
-                    </div>
-                </div>
-
-                <!-- 3) 배송지 신규 등록 폼 (아래쪽) -->
-                <div class="bg-white p-5 rounded-2xl shadow-sm border border-slate-200 flex flex-col gap-3">
-                    <h2 class="text-base font-bold text-slate-800 border-b pb-2">
-                        ➕ <span id="label-day" class="text-emerald-600">월요일</span> 배송지 신규 등록 및 상시 저장
-                    </h2>
-
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
-                        <div>
-                            <label class="block text-xs font-bold text-slate-500 mb-1">배송처명 *</label>
-                            <input type="text" id="input-name" placeholder="예: 효사랑 나눔의집" class="w-full px-3 py-2 border rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500">
-                        </div>
-                        <div>
-                            <label class="block text-xs font-bold text-slate-500 mb-1">도로명 주소 *</label>
-                            <input type="text" id="input-address" placeholder="예: 전남 나주시 빛가람로 100" class="w-full px-3 py-2 border rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500">
-                        </div>
-                        <div>
-                            <label class="block text-xs font-bold text-slate-500 mb-1">연락처</label>
-                            <input type="text" id="input-phone" placeholder="예: 061-123-4567" class="w-full px-3 py-2 border rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500">
-                        </div>
-                        <div>
-                            <label class="block text-xs font-bold text-slate-500 mb-1">배송 물량 / 기본 품목</label>
-                            <input type="text" id="input-item" placeholder="예: 식료품 상자 3개" class="w-full px-3 py-2 border rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500">
-                        </div>
-                    </div>
-
-                    <div class="flex gap-2 mt-1">
-                        <button type="button" onclick="handleAddAndAssign()" class="flex-2 bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-2.5 px-4 rounded-xl text-sm transition shadow-sm">
-                            + <span id="btn-day-name">월요일</span> 동선 및 상시 목록에 추가
-                        </button>
-                    </div>
-
-                    <div class="border-t pt-3 mt-1 flex gap-2">
-                        <button type="button" onclick="handleReset()" class="flex-1 bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 rounded-xl text-xs transition">
-                            🔄 오늘 일정 완료 (배송대기로 초기화)
-                        </button>
-                        <button type="button" onclick="handleDeleteAll()" class="flex-1 bg-slate-100 hover:bg-slate-200 text-slate-500 font-medium py-2 rounded-xl text-xs transition">
-                            이 요일 배송지 전체 삭제
-                        </button>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <!-- ==================== 2. 지도 동선 현황 섹션 ==================== -->
-        <div id="section-map" class="hidden flex-col gap-5">
-            <!-- 지도 탭 상단 다음 목적지 배너 -->
-            <div id="map-next-banner" class="bg-emerald-50 border border-emerald-200 p-4 rounded-2xl flex justify-between items-center hidden">
+            <!-- 1) 다음 배송 목적지 실시간 안내 배너 -->
+            <div id="next-target-banner" class="bg-emerald-50 border-2 border-emerald-500 p-4 rounded-2xl flex justify-between items-center shadow-sm hidden">
                 <div>
-                    <span class="text-xs text-emerald-600 font-bold">📍 지도에서 바로 다음 목적지 안내</span>
-                    <h3 id="map-next-name" class="text-base font-bold text-slate-800">배송처 이름</h3>
-                    <p id="map-next-addr" class="text-xs text-slate-500">주소 정보</p>
+                    <span class="text-xs text-emerald-700 font-extrabold tracking-wide uppercase">📍 다음 배송 목적지</span>
+                    <h3 id="next-target-name" class="text-lg font-bold text-slate-800 mt-0.5">배송처 이름</h3>
+                    <p id="next-target-addr" class="text-xs text-slate-600 mt-0.5">주소 정보</p>
                 </div>
-                <button type="button" id="map-next-navi-btn" class="bg-emerald-600 text-white font-bold text-xs px-4 py-2.5 rounded-xl shadow-sm hover:bg-emerald-700 transition">
-                    🚀 카카오내비
+                <button type="button" id="next-target-navi-btn" class="bg-emerald-600 text-white font-bold text-xs px-4 py-3 rounded-xl shadow-md hover:bg-emerald-700 transition flex items-center gap-1">
+                    🚀 카카오내비 길안내
                 </button>
             </div>
 
+            <!-- 2) 실시간 동선 지도 영역 -->
             <div class="bg-white p-5 rounded-2xl shadow-sm border border-slate-200 flex flex-col gap-3">
                 <div class="flex justify-between items-center border-b pb-2">
                     <h2 class="text-base font-bold text-slate-800">
-                        🗺️ <span id="map-day-title" class="text-emerald-600">월요일</span> 전체 배송 동선 지도
+                        🗺️ <span id="map-day-title" class="text-emerald-600">월요일</span> 배송 동선 현황 지도
                     </h2>
-                    <span class="text-xs text-slate-400">마커를 클릭하면 상세 정보 확인 가능</span>
+                    <button type="button" onclick="getCurrentLocation()" class="text-xs bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold px-3 py-1.5 rounded-lg border">
+                        📍 내 현재 위치로 이동
+                    </button>
                 </div>
-                <div id="map" class="w-full h-[450px] rounded-xl border border-slate-200"></div>
+                <div id="map" class="w-full h-[380px] rounded-xl border border-slate-200"></div>
             </div>
+
+            <!-- 3) 배송 목록 -->
+            <div class="bg-white p-5 rounded-2xl shadow-sm border border-slate-200">
+                <div class="flex justify-between items-center border-b pb-2 mb-4">
+                    <h2 class="text-base font-bold text-slate-800">
+                        📋 <span id="title-day" class="text-emerald-600">월요일</span> 상세 배송 목록 (<span id="count-num">0</span>건)
+                    </h2>
+                    <span class="text-xs text-slate-400">⚡ 실시간 동기화 완료</span>
+                </div>
+                <div id="list-container" class="flex flex-col gap-3 max-h-[500px] overflow-y-auto pr-1"></div>
+            </div>
+
+            <!-- 4) 전체 등록된 배송지 목록 (클릭 한 번으로 특정 요일에 추가) -->
+            <div class="bg-white p-5 rounded-2xl shadow-sm border border-slate-200 flex flex-col gap-3">
+                <div class="flex justify-between items-center border-b pb-2">
+                    <h2 class="text-base font-bold text-slate-800">
+                        ⭐ 등록된 배송지 전체 목록 (원하는 요일에 바로 추가)
+                    </h2>
+                    <span class="text-xs text-slate-400">전 직원 공용 저장소</span>
+                </div>
+                <div id="registered-places-container" class="grid grid-cols-1 md:grid-cols-2 gap-2.5 max-h-[250px] overflow-y-auto pr-1"></div>
+            </div>
+
+            <!-- 5) 신규 배송지 등록 전용 입력란 -->
+            <div class="bg-white p-5 rounded-2xl shadow-sm border border-slate-200 flex flex-col gap-3">
+                <h2 class="text-base font-bold text-slate-800 border-b pb-2">
+                    ➕ 신규 배송지 등록란 (저장소 신규 추가)
+                </h2>
+
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+                    <div>
+                        <label class="block text-xs font-bold text-slate-500 mb-1">배송처명 *</label>
+                        <input type="text" id="input-name" placeholder="예: 효사랑 나눔의집" class="w-full px-3 py-2 border rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold text-slate-500 mb-1">도로명 주소 *</label>
+                        <input type="text" id="input-address" placeholder="예: 전남 나주시 빛가람로 100" class="w-full px-3 py-2 border rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold text-slate-500 mb-1">연락처</label>
+                        <input type="text" id="input-phone" placeholder="예: 061-123-4567" class="w-full px-3 py-2 border rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold text-slate-500 mb-1">배송 물량 / 기본 품목</label>
+                        <input type="text" id="input-item" placeholder="예: 식료품 상자 3개" class="w-full px-3 py-2 border rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500">
+                    </div>
+                </div>
+
+                <div class="flex gap-2 mt-1">
+                    <button type="button" onclick="handleRegisterNewPlace()" class="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-2.5 px-4 rounded-xl text-sm transition shadow-sm">
+                        + 전체 배송지 목록에 등록하기
+                    </button>
+                </div>
+
+                <div class="border-t pt-3 mt-1 flex gap-2">
+                    <button type="button" onclick="handleReset()" class="flex-1 bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 rounded-xl text-xs transition">
+                        🔄 오늘 일정 완료 (배송대기로 초기화)
+                    </button>
+                    <button type="button" onclick="handleDeleteAll()" class="flex-1 bg-slate-100 hover:bg-slate-200 text-slate-500 font-medium py-2 rounded-xl text-xs transition">
+                        이 요일 배송지 전체 삭제
+                    </button>
+                </div>
+            </div>
+
         </div>
 
-        <!-- ==================== 3. 배송 특이사항 섹션 ==================== -->
+        <!-- ==================== 2. 배송 특이사항 (캘린더) 섹션 ==================== -->
         <div id="section-calendar" class="hidden flex-col gap-5">
             <div class="grid grid-cols-1 md:grid-cols-3 gap-5">
                 <div class="bg-white p-5 rounded-2xl shadow-sm border border-slate-200">
@@ -200,6 +187,7 @@
     </div>
 
     <script>
+        // Firebase 발급 정보
         const firebaseConfig = {
             apiKey: "AIzaSyAe6NjvfbsGlaXcA3Z3ncEihHpP2CGtPgo",
             authDomain: "najufoodbank.firebaseapp.com",
@@ -214,13 +202,13 @@
         const db = firebase.database();
 
         let store = { '월': [], '화': [], '수': [], '목': [], '금': [] };
-        let favoritePlaces = []; // 자주 가는 배송지 공용 풀
+        let registeredPlaces = []; // 전체 배송지 저장소 목록
         let calendarNotes = {};
         let currentDay = '월';
-        let activeMainTab = 'delivery';
 
         let map = null;
         let mapMarkers = [];
+        let userLocationMarker = null;
         let geocoder = null;
 
         let today = new Date();
@@ -232,12 +220,12 @@
             db.ref('delivery_store').on('value', (snapshot) => {
                 store = snapshot.val() || { '월': [], '화': [], '수': [], '목': [], '금': [] };
                 renderDelivery();
-                if (activeMainTab === 'map') renderMap();
+                renderMap();
             });
 
-            db.ref('favorite_places').on('value', (snapshot) => {
-                favoritePlaces = snapshot.val() || [];
-                renderFavorites();
+            db.ref('registered_places').on('value', (snapshot) => {
+                registeredPlaces = snapshot.val() || [];
+                renderRegisteredPlaces();
             });
 
             db.ref('calendar_notes').on('value', (snapshot) => {
@@ -247,36 +235,27 @@
             });
 
             changeDay('월');
+            setTimeout(() => { initMap(); }, 300);
         });
 
         function switchMainTab(tab) {
-            activeMainTab = tab;
             const delSec = document.getElementById('section-delivery');
-            const mapSec = document.getElementById('section-map');
             const calSec = document.getElementById('section-calendar');
 
             const delBtn = document.getElementById('main-tab-delivery');
-            const mapBtn = document.getElementById('main-tab-map');
             const calBtn = document.getElementById('main-tab-calendar');
-
-            delSec.classList.add('hidden');
-            mapSec.classList.add('hidden');
-            calSec.classList.add('hidden');
-
-            delBtn.className = "flex-1 py-3 rounded-xl font-bold text-xs sm:text-sm text-center transition text-slate-600 hover:text-slate-900";
-            mapBtn.className = "flex-1 py-3 rounded-xl font-bold text-xs sm:text-sm text-center transition text-slate-600 hover:text-slate-900";
-            calBtn.className = "flex-1 py-3 rounded-xl font-bold text-xs sm:text-sm text-center transition text-slate-600 hover:text-slate-900";
 
             if (tab === 'delivery') {
                 delSec.classList.remove('hidden');
-                delBtn.className = "flex-1 py-3 rounded-xl font-bold text-xs sm:text-sm text-center transition bg-white text-emerald-700 shadow-sm";
-            } else if (tab === 'map') {
-                mapSec.classList.remove('hidden');
-                mapBtn.className = "flex-1 py-3 rounded-xl font-bold text-xs sm:text-sm text-center transition bg-white text-emerald-700 shadow-sm";
-                setTimeout(() => renderMap(), 200);
-            } else if (tab === 'calendar') {
+                calSec.classList.add('hidden');
+                delBtn.className = "flex-1 py-3 rounded-xl font-bold text-sm text-center transition bg-white text-emerald-700 shadow-sm";
+                calBtn.className = "flex-1 py-3 rounded-xl font-bold text-sm text-center transition text-slate-600 hover:text-slate-900";
+                setTimeout(() => { if (map) map.relayout(); renderMap(); }, 100);
+            } else {
+                delSec.classList.add('hidden');
                 calSec.classList.remove('hidden');
-                calBtn.className = "flex-1 py-3 rounded-xl font-bold text-xs sm:text-sm text-center transition bg-white text-emerald-700 shadow-sm";
+                calBtn.className = "flex-1 py-3 rounded-xl font-bold text-sm text-center transition bg-white text-emerald-700 shadow-sm";
+                delBtn.className = "flex-1 py-3 rounded-xl font-bold text-sm text-center transition text-slate-600 hover:text-slate-900";
             }
         }
 
@@ -288,24 +267,47 @@
             const activeBtn = document.getElementById(`tab-${day}`);
             if(activeBtn) activeBtn.className = "day-btn flex-1 py-3 rounded-xl font-bold text-sm bg-emerald-600 text-white shadow-md border border-emerald-600";
 
-            document.getElementById('label-day').textContent = `${day}요일`;
-            document.getElementById('btn-day-name').textContent = `${day}요일`;
             document.getElementById('title-day').textContent = `${day}요일`;
             document.getElementById('map-day-title').textContent = `${day}요일`;
 
             renderDelivery();
-            if (activeMainTab === 'map') renderMap();
+            renderMap();
         }
 
-        function renderMap() {
+        // --- 지도 로직 ---
+        function initMap() {
             if (typeof kakao === 'undefined' || !kakao.maps) return;
-
             const mapContainer = document.getElementById('map');
             if (!map) {
                 const options = { center: new kakao.maps.LatLng(35.016, 126.716), level: 7 };
                 map = new kakao.maps.Map(mapContainer, options);
                 geocoder = new kakao.maps.services.Geocoder();
+                getCurrentLocation();
             }
+            renderMap();
+        }
+
+        function getCurrentLocation() {
+            if (navigator.geolocation) {
+                navigator.geolocation.getCurrentPosition((position) => {
+                    const lat = position.coords.latitude;
+                    const lon = position.coords.longitude;
+                    const locPosition = new kakao.maps.LatLng(lat, lon);
+
+                    if (userLocationMarker) userLocationMarker.setMap(null);
+
+                    userLocationMarker = new kakao.maps.Marker({
+                        map: map,
+                        position: locPosition
+                    });
+
+                    map.setCenter(locPosition);
+                });
+            }
+        }
+
+        function renderMap() {
+            if (!map || typeof kakao === 'undefined' || !kakao.maps) return;
 
             mapMarkers.forEach(m => m.setMap(null));
             mapMarkers = [];
@@ -324,7 +326,7 @@
                         bounds.extend(coords);
 
                         const infowindow = new kakao.maps.InfoWindow({
-                            content: `<div style="padding:8px;font-size:12px;font-weight:bold;">${idx + 1}. ${item.name}</div>`
+                            content: `<div style="padding:6px 10px;font-size:12px;font-weight:bold;">${idx + 1}. ${item.name}</div>`
                         });
                         kakao.maps.event.addListener(marker, 'click', function() {
                             infowindow.open(map, marker);
@@ -336,11 +338,11 @@
         }
 
         function saveStoreToFirebase() { db.ref('delivery_store').set(store); }
-        function saveFavoritesToFirebase() { db.ref('favorite_places').set(favoritePlaces); }
+        function saveRegisteredPlacesToFirebase() { db.ref('registered_places').set(registeredPlaces); }
         function saveCalendarToFirebase() { db.ref('calendar_notes').set(calendarNotes); }
 
-        // 하단 폼에서 입력 시 -> 오늘 요일 동선 추가 + 자주 가는 배송지(공용풀)에 자동 상시 등록
-        function handleAddAndAssign() {
+        // 신규 배송지 등록 (전체 배송지 저장소로 추가)
+        function handleRegisterNewPlace() {
             const name = document.getElementById('input-name').value.trim();
             const address = document.getElementById('input-address').value.trim();
             const phone = document.getElementById('input-phone').value.trim();
@@ -348,73 +350,83 @@
 
             if (!name || !address) { alert('배송처명과 주소는 필수 입력 항목입니다!'); return; }
 
-            const itemData = {
+            const newPlace = {
                 id: Date.now(),
                 name: name,
                 address: address,
                 phone: phone || '연락처 없음',
-                item: item || '기본 물량',
-                memo: '',
-                done: false
+                item: item || '기본 물량'
             };
 
-            // 1. 오늘 요일 동선에 추가
-            if (!store[currentDay]) store[currentDay] = [];
-            store[currentDay].push(itemData);
-            saveStoreToFirebase();
-
-            // 2. 자주 가는 배송지 공용 풀에 중복이 없다면 추가
-            if (!favoritePlaces.some(x => x.name === name && x.address === address)) {
-                favoritePlaces.push({ name, address, phone, item });
-                saveFavoritesToFirebase();
-            }
+            registeredPlaces.push(newPlace);
+            saveRegisteredPlacesToFirebase();
 
             document.getElementById('input-name').value = '';
             document.getElementById('input-address').value = '';
             document.getElementById('input-phone').value = '';
             document.getElementById('input-item').value = '';
+            alert('전체 배송지 목록에 등록되었습니다! 상단 목록에서 버튼 클릭으로 원하는 요일에 추가할 수 있습니다.');
         }
 
-        // 자주 가는 배송지 목록에서 클릭 한 번으로 오늘 동선에 추가
-        function addFavoriteToCurrentDay(fav) {
+        // 전체 배송지 목록에서 특정 요일 동선에 클릭 한 번으로 추가
+        function addPlaceToDay(place, day) {
             const itemData = {
                 id: Date.now(),
-                name: fav.name,
-                address: fav.address,
-                phone: fav.phone || '연락처 없음',
-                item: fav.item || '기본 물량',
+                name: place.name,
+                address: place.address,
+                phone: place.phone,
+                item: place.item,
                 memo: '',
                 done: false
             };
-            if (!store[currentDay]) store[currentDay] = [];
-            store[currentDay].push(itemData);
+
+            if (!store[day]) store[day] = [];
+            store[day].push(itemData);
             saveStoreToFirebase();
+            alert(`'${place.name}' 배송지가 ${day}요일 동선에 추가되었습니다!`);
         }
 
-        function renderFavorites() {
-            const container = document.getElementById('favorites-container');
-            if (favoritePlaces.length === 0) {
-                container.innerHTML = `<div class="text-slate-400 text-xs col-span-2 py-3 text-center">등록된 상시 배송지가 없습니다. 아래에서 신규 등록하면 여기에 자동 저장됩니다!</div>`;
+        function deleteRegisteredPlace(id) {
+            if (confirm('이 배송지를 전체 저장소에서 삭제하시겠습니까?')) {
+                registeredPlaces = registeredPlaces.filter(x => x.id !== id);
+                saveRegisteredPlacesToFirebase();
+            }
+        }
+
+        function renderRegisteredPlaces() {
+            const container = document.getElementById('registered-places-container');
+            if (registeredPlaces.length === 0) {
+                container.innerHTML = `<div class="text-slate-400 text-xs col-span-2 py-4 text-center bg-slate-50 rounded-xl border border-dashed">등록된 배송지가 없습니다. 하단 양식에서 배송지를 등록해 보세요!</div>`;
                 return;
             }
+
             let html = '';
-            favoritePlaces.forEach((fav, idx) => {
+            registeredPlaces.forEach((place) => {
                 html += `
-                    <div class="p-2.5 bg-slate-50 border border-slate-200 rounded-xl flex justify-between items-center gap-2">
-                        <div class="overflow-hidden">
-                            <h4 class="font-bold text-xs text-slate-800 truncate">${fav.name}</h4>
-                            <p class="text-[11px] text-slate-500 truncate">${fav.address}</p>
+                    <div class="p-3 bg-slate-50 border border-slate-200 rounded-xl flex flex-col gap-2">
+                        <div class="flex justify-between items-start">
+                            <div class="overflow-hidden">
+                                <h4 class="font-bold text-xs text-slate-800 truncate">${place.name}</h4>
+                                <p class="text-[11px] text-slate-500 truncate">📍 ${place.address}</p>
+                            </div>
+                            <button type="button" onclick="deleteRegisteredPlace(${place.id})" class="text-slate-400 hover:text-rose-500 text-xs font-bold px-1">✕</button>
                         </div>
-                        <button type="button" onclick="addFavoriteToCurrentDay(${JSON.stringify(fav).replace(/"/g, '&quot;')})" class="bg-emerald-100 hover:bg-emerald-200 text-emerald-800 font-bold text-xs px-2.5 py-1.5 rounded-lg whitespace-nowrap transition">
-                            + 오늘 동선에 넣기
-                        </button>
+                        <div class="flex items-center justify-between border-t border-slate-200 pt-2 gap-1">
+                            <span class="text-[11px] font-bold text-slate-400">요일 추가:</span>
+                            <div class="flex gap-1">
+                                <button type="button" onclick="addPlaceToDay(${JSON.stringify(place).replace(/"/g, '&quot;')}, '월')" class="bg-emerald-100 hover:bg-emerald-600 hover:text-white text-emerald-800 font-bold text-xs px-2 py-0.5 rounded transition">월</button>
+                                <button type="button" onclick="addPlaceToDay(${JSON.stringify(place).replace(/"/g, '&quot;')}, '화')" class="bg-emerald-100 hover:bg-emerald-600 hover:text-white text-emerald-800 font-bold text-xs px-2 py-0.5 rounded transition">화</button>
+                                <button type="button" onclick="addPlaceToDay(${JSON.stringify(place).replace(/"/g, '&quot;')}, '수')" class="bg-emerald-100 hover:bg-emerald-600 hover:text-white text-emerald-800 font-bold text-xs px-2 py-0.5 rounded transition">수</button>
+                                <button type="button" onclick="addPlaceToDay(${JSON.stringify(place).replace(/"/g, '&quot;')}, '목')" class="bg-emerald-100 hover:bg-emerald-600 hover:text-white text-emerald-800 font-bold text-xs px-2 py-0.5 rounded transition">목</button>
+                                <button type="button" onclick="addPlaceToDay(${JSON.stringify(place).replace(/"/g, '&quot;')}, '금')" class="bg-emerald-100 hover:bg-emerald-600 hover:text-white text-emerald-800 font-bold text-xs px-2 py-0.5 rounded transition">금</button>
+                            </div>
+                        </div>
                     </div>
                 `;
             });
             container.innerHTML = html;
         }
 
-        // 순서 위로/아래로 이동
         function moveItem(index, direction) {
             const list = store[currentDay];
             const targetIdx = index + direction;
@@ -425,21 +437,16 @@
             saveStoreToFirebase();
         }
 
-        // 다른 요일로 이동
         function moveItemToAnotherDay(index) {
             const days = ['월', '화', '수', '목', '금'];
             const targetDay = prompt(`어느 요일로 이동하시겠습니까? (입력 예: 월, 화, 수, 목, 금)`, currentDay === '월' ? '화' : '월');
-            if (!targetDay || !days.includes(targetDay)) {
-                if (targetDay) alert('올바른 요일(월, 화, 수, 목, 금)을 입력해주세요.');
-                return;
-            }
+            if (!targetDay || !days.includes(targetDay)) return;
             if (targetDay === currentDay) return;
 
             const item = store[currentDay].splice(index, 1)[0];
             if (!store[targetDay]) store[targetDay] = [];
             store[targetDay].push(item);
             saveStoreToFirebase();
-            alert(`${targetDay}요일로 이동되었습니다!`);
         }
 
         function toggleDone(id) {
@@ -490,34 +497,21 @@
             const pct = totalCount > 0 ? Math.round((doneCount / totalCount) * 100) : 0;
             document.getElementById('header-badge').textContent = `진행률: ${doneCount} / ${totalCount}건 (${pct}%)`;
 
-            // 다음 목적지 배너 업데이트 (배송 탭 & 지도 탭 공용)
+            // 다음 목적지 상단 배너
             const nextTarget = list.find(x => !x.done);
             const banner = document.getElementById('next-target-banner');
-            const mapBanner = document.getElementById('map-next-banner');
 
             if (nextTarget) {
-                const bannerHtml = `
-                    <div>
-                        <span class="text-xs text-emerald-600 font-bold">📍 다음 배송 목적지</span>
-                        <h3 class="text-base font-bold text-slate-800">${nextTarget.name}</h3>
-                        <p class="text-xs text-slate-500">${nextTarget.address}</p>
-                    </div>
-                    <button type="button" onclick="goNavi('kakao', '${nextTarget.address}')" class="bg-emerald-600 text-white font-bold text-xs px-4 py-2.5 rounded-xl shadow-sm hover:bg-emerald-700 transition">
-                        🚀 카카오내비
-                    </button>
-                `;
-                banner.innerHTML = bannerHtml;
+                document.getElementById('next-target-name').textContent = nextTarget.name;
+                document.getElementById('next-target-addr').textContent = nextTarget.address;
+                document.getElementById('next-target-navi-btn').onclick = () => goNavi('kakao', nextTarget.address);
                 banner.classList.remove('hidden');
-
-                mapBanner.innerHTML = bannerHtml;
-                mapBanner.classList.remove('hidden');
             } else {
                 banner.classList.add('hidden');
-                mapBanner.classList.add('hidden');
             }
 
             if (list.length === 0) {
-                container.innerHTML = `<div class="text-center py-16 text-slate-400 text-sm bg-slate-50 rounded-xl border border-dashed border-slate-200">📍 ${currentDay}요일에 등록된 배송지가 없습니다.<br>아래 자주 가는 배송지나 신규 등록을 이용해 보세요!</div>`;
+                container.innerHTML = `<div class="text-center py-12 text-slate-400 text-sm bg-slate-50 rounded-xl border border-dashed border-slate-200">📍 ${currentDay}요일에 등록된 배송지가 없습니다.<br>아래 전체 배송지 목록에서 원하시는 요일을 눌러 추가해 보세요!</div>`;
                 return;
             }
 
@@ -531,12 +525,10 @@
                                 <h3 class="font-bold text-slate-800 text-sm ${item.done ? 'line-through text-slate-500' : ''}">${item.name}</h3>
                             </div>
                             <div class="flex items-center gap-1">
-                                <!-- 순서 이동 및 요일 이동 버튼 -->
                                 <button type="button" onclick="moveItem(${index}, -1)" class="text-slate-400 hover:text-slate-700 text-xs px-1 font-bold" title="위로">▲</button>
                                 <button type="button" onclick="moveItem(${index}, 1)" class="text-slate-400 hover:text-slate-700 text-xs px-1 font-bold" title="아래로">▼</button>
-                                <button type="button" onclick="moveItemToAnotherDay(${index})" class="text-xs text-blue-600 hover:text-blue-800 font-bold px-1.5 py-0.5 bg-blue-50 rounded" title="다른 요일로 이동">요일이동</button>
-                                
-                                <button type="button" onclick="toggleDone(${item.id})" class="text-xs px-2 py-1 rounded-lg font-bold ${item.done ? 'bg-emerald-600 text-white' : 'bg-amber-100 text-amber-800'}">
+                                <button type="button" onclick="moveItemToAnotherDay(${index})" class="text-xs text-blue-600 hover:text-blue-800 font-bold px-1.5 py-0.5 bg-blue-50 rounded">요일이동</button>
+                                <button type="button" onclick="toggleDone(${item.id})" class="text-xs px-2.5 py-1 rounded-lg font-bold ${item.done ? 'bg-emerald-600 text-white' : 'bg-amber-100 text-amber-800'}">
                                     ${item.done ? '✓ 완료' : '⏳ 대기'}
                                 </button>
                                 <button type="button" onclick="deleteItem(${item.id})" class="text-slate-400 hover:text-rose-500 text-xs font-bold px-1">✕</button>
