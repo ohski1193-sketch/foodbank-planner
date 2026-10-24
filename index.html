@@ -22,7 +22,7 @@
     <style>
         body { font-family: 'Pretendard', sans-serif; }
         
-        /* 테슬라 다크모드 스타일 지도를 위한 CSS 필터 */
+        /* 다크모드 스타일 지도를 위한 CSS 필터 */
         .tesla-map-container #map {
             filter: invert(90%) hue-rotate(180deg) brightness(95%) contrast(90%);
         }
@@ -40,7 +40,7 @@
                 <h1 class="text-2xl font-bold flex items-center gap-2">
                     🚚 <span class="text-emerald-400">나주시 기초푸드뱅크</span> 경로안내
                 </h1>
-                <p class="text-slate-400 text-xs mt-1">전직원 실시간 동기화 주간 배송지 & 테슬라 스타일 지도 플래너</p>
+                <p class="text-slate-400 text-xs mt-1">전직원 실시간 동기화 주간 배송지 & </p>
             </div>
             <div id="header-badge" class="bg-emerald-950 text-emerald-400 border border-emerald-700 px-4 py-2 rounded-xl text-xs font-semibold">
                 진행률: 0 / 0건 (0%)
@@ -83,11 +83,11 @@
                 </button>
             </div>
 
-            <!-- 2) 테슬라 스타일 실시간 동선 지도 영역 -->
+            <!-- 2) 스타일 실시간 동선 지도 영역 -->
             <div class="tesla-map-container bg-slate-800 p-4 rounded-2xl shadow-lg border border-slate-700 flex flex-col gap-3">
                 <div class="flex justify-between items-center border-b border-slate-700 pb-2">
                     <h2 class="text-base font-bold text-white flex items-center gap-2">
-                        🗺️ <span id="map-day-title" class="text-emerald-400">월요일</span> 실시간 지도 동선 (Tesla Dark)
+                        🗺️ <span id="map-day-title" class="text-emerald-400">월요일</span> 실시간 지도 동선 
                     </h2>
                     <button type="button" onclick="getCurrentLocation()" class="text-xs bg-slate-700 hover:bg-slate-600 text-emerald-400 font-bold px-3 py-1.5 rounded-lg border border-slate-600 transition">
                         📍 내 위치 추적
