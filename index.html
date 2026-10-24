@@ -19,6 +19,9 @@
     <!-- 카카오 지도 API -->
     <script type="text/javascript" src="//dapi.kakao.com/v2/maps/sdk.js?appkey=bb4ed44dd682ef912b4c09ba8b10845f&libraries=services"></script>
 
+    <!-- 카카오 내비 SDK 추가 -->
+    <script src="https://t1.kakaocdn.net/kakao_js_sdk/2.7.2/kakao.min.js" crossorigin="anonymous"></script>
+
     <style>
         body { font-family: 'Pretendard', sans-serif; }
         
@@ -26,7 +29,6 @@
         .tesla-map-container #map {
             filter: invert(90%) hue-rotate(180deg) brightness(95%) contrast(90%);
         }
-        /* 지도 오버레이 팝업 및 마커는 원래 색상 유지 */
         .tesla-map-container .custom-overlay {
             filter: invert(0%) hue-rotate(0deg) !important;
         }
@@ -41,14 +43,14 @@
                 <h1 class="text-2xl font-bold flex items-center gap-2">
                     🚚 <span class="text-emerald-400">나주시 기초푸드뱅크</span> 경로안내
                 </h1>
-                <p class="text-slate-400 text-xs mt-1">전직원 실시간 동기화 주간 배송지</p>
+                <p class="text-slate-400 text-xs mt-1">전직원 실시간 동기화 주간 배송지 & 테슬라 스타일 지도 플래너</p>
             </div>
             <div id="header-badge" class="bg-emerald-950 text-emerald-400 border border-emerald-700 px-4 py-2 rounded-xl text-xs font-semibold">
                 진행률: 0 / 0건 (0%)
             </div>
         </header>
 
-        <!-- 메인 탭 (배송목록 & 지도 / 캘린더 / 전체 배송지 관리) -->
+        <!-- 메인 탭 -->
         <div class="flex gap-2 mb-6 bg-slate-800 p-1.5 rounded-2xl border border-slate-700">
             <button type="button" onclick="switchMainTab('delivery')" id="main-tab-delivery" class="flex-1 py-3 rounded-xl font-bold text-xs sm:text-sm text-center transition bg-emerald-600 text-white shadow-sm">
                 🚛 주간 배송 목록 & 지도
@@ -237,6 +239,11 @@
         let selectedDateStr = formatDate(today.getFullYear(), today.getMonth() + 1, today.getDate());
 
         window.addEventListener('DOMContentLoaded', () => {
+            // 카카오 SDK 초기화
+            if (typeof Kakao !== 'undefined') {
+                Kakao.init('bb4ed44dd682ef912b4c09ba8b10845f');
+            }
+
             db.ref('delivery_store').on('value', (snapshot) => {
                 store = snapshot.val() || { '월': [], '화': [], '수': [], '목': [], '금': [] };
                 renderDelivery();
@@ -553,11 +560,54 @@
             }
         }
 
-        function goNavi(app, address) {
+        // --- 카카오내비 앱 다이렉트 연동 함수 ---
+        function goNavi(app, address, placeName = '') {
             const encoded = encodeURIComponent(address);
-            if (app === 'kakao') window.open(`https://map.kakao.com/link/search/${encoded}`, '_blank');
-            if (app === 'tmap') window.open(`https://surl.tmap.co.kr/search?keyword=${encoded}`, '_blank');
-            if (app === 'naver') window.open(`https://map.naver.com/v5/search/${encoded}`, '_blank');
+
+            if (app === 'kakao') {
+                const isMobile = /Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
+
+                if (!isMobile) {
+                    window.open(`https://map.kakao.com/link/search/${encoded}`, '_blank');
+                    return;
+                }
+
+                if (typeof kakao === 'undefined' || !kakao.maps || !geocoder) {
+                    alert('카카오 지도 API를 불러오지 못했습니다.');
+                    return;
+                }
+
+                geocoder.addressSearch(address, function(result, status) {
+                    if (status === kakao.maps.services.Status.OK && result.length > 0) {
+                        const x = Number(result[0].x);
+                        const y = Number(result[0].y);
+                        const name = placeName || address;
+
+                        if (typeof Kakao !== 'undefined' && Kakao.isInitialized && Kakao.isInitialized() && Kakao.Navi) {
+                            Kakao.Navi.start({
+                                name: name,
+                                x: x,
+                                y: y,
+                                coordType: 'wgs84'
+                            });
+                        } else {
+                            window.location.href = `https://map.kakao.com/link/search/${encoded}`;
+                        }
+                    } else {
+                        alert('주소를 좌표로 변환하지 못했습니다. 주소를 확인해 주세요.');
+                    }
+                });
+
+                return;
+            }
+
+            if (app === 'tmap') {
+                window.open(`https://surl.tmap.co.kr/search?keyword=${encoded}`, '_blank');
+            }
+
+            if (app === 'naver') {
+                window.open(`https://map.naver.com/v5/search/${encoded}`, '_blank');
+            }
         }
 
         function renderDelivery() {
@@ -576,7 +626,7 @@
             if (nextTarget) {
                 document.getElementById('next-target-name').textContent = nextTarget.name;
                 document.getElementById('next-target-addr').textContent = nextTarget.address;
-                document.getElementById('next-target-navi-btn').onclick = () => goNavi('kakao', nextTarget.address);
+                document.getElementById('next-target-navi-btn').onclick = () => goNavi('kakao', nextTarget.address, nextTarget.name);
                 banner.classList.remove('hidden');
             } else {
                 banner.classList.add('hidden');
@@ -615,7 +665,7 @@
                             <input type="text" value="${item.memo || ''}" onchange="updateMemo(${item.id}, this.value)" placeholder="📝 현장 특이사항 메모 (자동저장)" class="w-full px-2.5 py-1 border border-slate-700 rounded-lg text-xs bg-slate-950 text-slate-200 focus:outline-none focus:ring-1 focus:ring-emerald-500">
                         </div>
                         <div class="flex gap-1.5 pt-1">
-                            <button type="button" onclick="goNavi('kakao', '${item.address}')" class="flex-1 bg-yellow-500 hover:bg-yellow-400 text-slate-950 font-bold py-1.5 rounded-lg text-xs">카카오내비</button>
+                            <button type="button" onclick="goNavi('kakao', '${item.address}', '${item.name}')" class="flex-1 bg-yellow-500 hover:bg-yellow-400 text-slate-950 font-bold py-1.5 rounded-lg text-xs">카카오내비</button>
                             <button type="button" onclick="goNavi('tmap', '${item.address}')" class="flex-1 bg-red-600 hover:bg-red-500 text-white font-bold py-1.5 rounded-lg text-xs">TMAP</button>
                             <button type="button" onclick="goNavi('naver', '${item.address}')" class="flex-1 bg-green-600 hover:bg-green-500 text-white font-bold py-1.5 rounded-lg text-xs">네이버지도</button>
                         </div>
