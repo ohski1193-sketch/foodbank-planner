@@ -22,7 +22,7 @@
     <style>
         body { font-family: 'Pretendard', sans-serif; }
         
-        /* 다크모드 스타일 지도를 위한 CSS 필터 */
+        /* 테슬라 다크모드 스타일 지도를 위한 CSS 필터 */
         .tesla-map-container #map {
             filter: invert(90%) hue-rotate(180deg) brightness(95%) contrast(90%);
         }
@@ -40,7 +40,7 @@
                 <h1 class="text-2xl font-bold flex items-center gap-2">
                     🚚 <span class="text-emerald-400">나주시 기초푸드뱅크</span> 경로안내
                 </h1>
-                <p class="text-slate-400 text-xs mt-1">전직원 실시간 동기화 주간 배송지 & </p>
+                <p class="text-slate-400 text-xs mt-1">전직원 실시간 동기화 주간 배송지 & 테슬라 스타일 지도 플래너</p>
             </div>
             <div id="header-badge" class="bg-emerald-950 text-emerald-400 border border-emerald-700 px-4 py-2 rounded-xl text-xs font-semibold">
                 진행률: 0 / 0건 (0%)
@@ -83,17 +83,27 @@
                 </button>
             </div>
 
-            <!-- 2) 스타일 실시간 동선 지도 영역 -->
+            <!-- 2) 테슬라 스타일 실시간 동선 지도 영역 -->
             <div class="tesla-map-container bg-slate-800 p-4 rounded-2xl shadow-lg border border-slate-700 flex flex-col gap-3">
                 <div class="flex justify-between items-center border-b border-slate-700 pb-2">
                     <h2 class="text-base font-bold text-white flex items-center gap-2">
-                        🗺️ <span id="map-day-title" class="text-emerald-400">월요일</span> 실시간 지도 동선 
+                        🗺️ <span id="map-day-title" class="text-emerald-400">월요일</span> 실시간 지도 동선 (Tesla Dark)
                     </h2>
                     <button type="button" onclick="getCurrentLocation()" class="text-xs bg-slate-700 hover:bg-slate-600 text-emerald-400 font-bold px-3 py-1.5 rounded-lg border border-slate-600 transition">
                         📍 내 위치 추적
                     </button>
                 </div>
                 <div id="map" class="w-full h-[400px] rounded-xl overflow-hidden border border-slate-700"></div>
+                <div class="rounded-xl border border-emerald-700 bg-slate-950 p-4 space-y-2">
+                    <div class="text-xs text-emerald-400 font-bold">🚘 웹 내비게이션 모드 · GPS 위치 추적</div>
+                    <div id="nav-target-name" class="text-lg font-bold">다음 배송지를 불러오는 중…</div>
+                    <div id="nav-guidance" class="text-sm text-slate-300">위치 권한을 허용하면 현재 위치와 목적지 방향을 표시합니다.</div>
+                    <div class="flex gap-2">
+                        <button type="button" onclick="startWebNavigation()" class="flex-1 bg-emerald-600 hover:bg-emerald-500 rounded-lg py-2 text-sm font-bold">▶ 웹 내비 시작</button>
+                        <button type="button" onclick="stopWebNavigation()" class="bg-slate-700 hover:bg-slate-600 rounded-lg px-4 py-2 text-sm font-bold">■ 추적 종료</button>
+                    </div>
+                    <p class="text-[11px] text-amber-300">안내: 이 HTML 버전은 GPS 위치·목적지 방향을 지도에 표시합니다. 실제 도로를 따라가는 경로선, 회전별 음성 안내는 웹용 카카오내비 SDK에서 제공되지 않으며 별도 서버/네이티브 SDK 개발이 필요합니다.</p>
+                </div>
             </div>
 
             <!-- 3) 요일별 배송 동선 목록 -->
@@ -229,6 +239,11 @@
         let mapMarkers = [];
         let userLocationMarker = null;
         let geocoder = null;
+        let userPosition = null;
+        let locationWatchId = null;
+        let navTargetMarker = null;
+        let navGuideLine = null;
+        let navTargetCoords = null;
 
         let today = new Date();
         let calYear = today.getFullYear();
@@ -316,6 +331,9 @@
 
             renderDelivery();
             renderMap();
+            const nextTarget = (store[currentDay] || []).find(x => !x.done);
+            if (nextTarget && geocoder) setWebNavigationTarget(nextTarget);
+            else if (geocoder) setWebNavigationTarget(null);
         }
 
         // --- 지도 로직 ---
@@ -332,22 +350,113 @@
         }
 
         function getCurrentLocation() {
-            if (navigator.geolocation) {
-                navigator.geolocation.getCurrentPosition((position) => {
-                    const lat = position.coords.latitude;
-                    const lon = position.coords.longitude;
-                    const locPosition = new kakao.maps.LatLng(lat, lon);
-
-                    if (userLocationMarker) userLocationMarker.setMap(null);
-
-                    userLocationMarker = new kakao.maps.Marker({
-                        map: map,
-                        position: locPosition
-                    });
-
-                    map.setCenter(locPosition);
-                });
+            if (!navigator.geolocation) {
+                alert('이 브라우저는 GPS 위치 추적을 지원하지 않습니다.');
+                return;
             }
+            navigator.geolocation.getCurrentPosition((position) => {
+                updateUserPosition(position);
+                if (map && userPosition) map.setCenter(userPosition);
+            }, (error) => {
+                const msg = error.code === 1 ? '위치 권한이 거부되었습니다. 브라우저 설정에서 위치 권한을 허용해 주세요.' : '현재 위치를 가져오지 못했습니다. HTTPS 또는 localhost 환경인지 확인해 주세요.';
+                document.getElementById('nav-guidance').textContent = msg;
+                alert(msg);
+            }, { enableHighAccuracy: true, timeout: 15000, maximumAge: 3000 });
+        }
+
+        function updateUserPosition(position) {
+            if (!map || typeof kakao === 'undefined' || !kakao.maps) return;
+            userPosition = new kakao.maps.LatLng(position.coords.latitude, position.coords.longitude);
+            if (userLocationMarker) userLocationMarker.setMap(null);
+            userLocationMarker = new kakao.maps.Marker({
+                map: map,
+                position: userPosition,
+                title: '현재 위치'
+            });
+            updateWebNavigationDisplay();
+        }
+
+        function startWebNavigation() {
+            const target = (store[currentDay] || []).find(x => !x.done);
+            if (!target) {
+                alert('남은 배송지가 없습니다.');
+                return;
+            }
+            if (!navigator.geolocation) {
+                alert('이 브라우저는 위치 추적을 지원하지 않습니다.');
+                return;
+            }
+            setWebNavigationTarget(target);
+            if (locationWatchId !== null) navigator.geolocation.clearWatch(locationWatchId);
+            locationWatchId = navigator.geolocation.watchPosition((position) => {
+                updateUserPosition(position);
+                if (userPosition && map) map.panTo(userPosition);
+            }, (error) => {
+                document.getElementById('nav-guidance').textContent = error.code === 1 ? '위치 권한을 허용해야 내 위치를 추적할 수 있습니다.' : 'GPS 신호를 확인 중입니다. HTTPS 환경과 위치 설정을 확인해 주세요.';
+            }, { enableHighAccuracy: true, maximumAge: 2000, timeout: 15000 });
+        }
+
+        function stopWebNavigation() {
+            if (locationWatchId !== null && navigator.geolocation) navigator.geolocation.clearWatch(locationWatchId);
+            locationWatchId = null;
+            document.getElementById('nav-guidance').textContent = 'GPS 추적을 종료했습니다.';
+        }
+
+        function setWebNavigationTarget(target) {
+            const nameEl = document.getElementById('nav-target-name');
+            if (!target) {
+                nameEl.textContent = '모든 배송 완료';
+                document.getElementById('nav-guidance').textContent = '오늘 배정된 배송을 모두 완료했습니다.';
+                navTargetCoords = null;
+                if (navTargetMarker) navTargetMarker.setMap(null);
+                if (navGuideLine) navGuideLine.setMap(null);
+                return;
+            }
+            nameEl.textContent = '다음 목적지: ' + target.name;
+            document.getElementById('nav-guidance').textContent = target.address + ' · 목적지 좌표를 찾는 중…';
+            if (!geocoder) return;
+            geocoder.addressSearch(target.address, (result, status) => {
+                if (status !== kakao.maps.services.Status.OK || !result || !result.length) {
+                    document.getElementById('nav-guidance').textContent = '주소를 찾지 못했습니다: ' + target.address + ' (전체 주소로 수정해 주세요)';
+                    return;
+                }
+                navTargetCoords = new kakao.maps.LatLng(Number(result[0].y), Number(result[0].x));
+                if (navTargetMarker) navTargetMarker.setMap(null);
+                navTargetMarker = new kakao.maps.Marker({ map, position: navTargetCoords, title: target.name });
+                map.setCenter(navTargetCoords);
+                map.setLevel(4);
+                updateWebNavigationDisplay();
+            });
+        }
+
+        function updateWebNavigationDisplay() {
+            if (!userPosition || !navTargetCoords || !map) return;
+            if (navGuideLine) navGuideLine.setMap(null);
+            // 직선은 방향 참고선이며 실제 도로 경로가 아닙니다.
+            navGuideLine = new kakao.maps.Polyline({
+                map,
+                path: [userPosition, navTargetCoords],
+                strokeWeight: 5,
+                strokeColor: '#10b981',
+                strokeOpacity: 0.9,
+                strokeStyle: 'shortdash'
+            });
+            const distance = Math.round(map.getProjection().coordsToPoint(userPosition).x === map.getProjection().coordsToPoint(navTargetCoords).x ? 0 :
+                (function(){
+                    const lat1 = userPosition.getLat() * Math.PI / 180;
+                    const lat2 = navTargetCoords.getLat() * Math.PI / 180;
+                    const dLat = lat2 - lat1;
+                    const dLon = (navTargetCoords.getLng() - userPosition.getLng()) * Math.PI / 180;
+                    const a = Math.sin(dLat/2)**2 + Math.cos(lat1)*Math.cos(lat2)*Math.sin(dLon/2)**2;
+                    return 6371000 * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+                })());
+            const bearing = (function(){
+                const lat1 = userPosition.getLat()*Math.PI/180, lat2 = navTargetCoords.getLat()*Math.PI/180;
+                const dLon = (navTargetCoords.getLng()-userPosition.getLng())*Math.PI/180;
+                return (Math.atan2(Math.sin(dLon)*Math.cos(lat2), Math.cos(lat1)*Math.sin(lat2)-Math.sin(lat1)*Math.cos(lat2)*Math.cos(dLon))*180/Math.PI+360)%360;
+            })();
+            const directions = ['북쪽','북동쪽','동쪽','남동쪽','남쪽','남서쪽','서쪽','북서쪽'];
+            document.getElementById('nav-guidance').textContent = `목적지 방향: ${directions[Math.round(bearing/45)%8]} · 직선거리 약 ${(distance/1000).toFixed(distance >= 1000 ? 1 : 2)}km · 도로 주행거리가 아닙니다.`;
         }
 
         function renderMap() {
@@ -538,8 +647,20 @@
         }
 
         function toggleDone(id) {
-            const target = store[currentDay].find(x => x.id === id);
-            if (target) { target.done = !target.done; saveStoreToFirebase(); }
+            const list = store[currentDay] || [];
+            const target = list.find(x => x.id === id);
+            if (!target) return;
+            const wasDone = !!target.done;
+            target.done = !target.done;
+            saveStoreToFirebase();
+            if (!wasDone && target.done) {
+                const next = list.find(x => !x.done);
+                setWebNavigationTarget(next || null);
+                renderDelivery();
+                // 웹에서는 브라우저가 GPS 추적을 유지할 수 있지만, 음성 내비/자동 턴 안내는 제공하지 않습니다.
+            } else if (wasDone && !target.done) {
+                setWebNavigationTarget(target);
+            }
         }
 
         function updateMemo(id, text) {
