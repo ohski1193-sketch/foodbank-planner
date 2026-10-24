@@ -11,6 +11,11 @@
     <!-- Tailwind CSS CDN -->
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Pretendard:wght@400;600;700&display=swap" rel="stylesheet">
+    
+    <!-- Firebase SDK (v9 호환 모듈) -->
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
+
     <style>
         body { font-family: 'Pretendard', sans-serif; }
     </style>
@@ -21,15 +26,15 @@
         <!-- 상단 헤더 -->
         <header class="bg-emerald-600 text-white p-5 rounded-2xl shadow-md mb-5 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
             <div>
-                <h1 class="text-2xl font-bold">🚚 푸드뱅크 스마트 관리 시스템</h1>
-                <p class="text-emerald-100 text-xs mt-1">주간 고정 배송 동선 및 날짜별 현장 특이사항 캘린더</p>
+                <h1 class="text-2xl font-bold">🚚 푸드뱅크 실시간 스마트 관리</h1>
+                <p class="text-emerald-100 text-xs mt-1">전직원 실시간 동기화 주간 배송지 및 특이사항 플래너</p>
             </div>
             <div id="header-badge" class="bg-emerald-700 px-4 py-2 rounded-xl text-xs font-semibold">
                 진행률: 0 / 0건 (0%)
             </div>
         </header>
 
-        <!-- 상위 메인 탭 (배송 업무 vs 특이사항 캘린더) -->
+        <!-- 메인 탭 -->
         <div class="flex gap-3 mb-6 bg-slate-200 p-1.5 rounded-2xl">
             <button type="button" onclick="switchMainTab('delivery')" id="main-tab-delivery" class="flex-1 py-3 rounded-xl font-bold text-sm text-center transition bg-white text-emerald-700 shadow-sm">
                 🚛 주간 배송 업무 플래너
@@ -39,7 +44,7 @@
             </button>
         </div>
 
-        <!-- ==================== 1. 주간 배송 업무 섹션 ==================== -->
+        <!-- 1. 주간 배송 섹션 -->
         <div id="section-delivery" class="flex flex-col gap-5">
             <!-- 요일 선택 탭 -->
             <div class="flex gap-2">
@@ -50,22 +55,20 @@
                 <button type="button" onclick="changeDay('금')" id="tab-금" class="day-btn flex-1 py-3 rounded-xl font-bold text-sm bg-white text-slate-600 shadow-sm border border-slate-200">금요일</button>
             </div>
 
-            <!-- 배송 레이아웃 (배송 목록 위, 등록 폼 아래로 재배치) -->
             <div class="flex flex-col gap-5">
-                
-                <!-- 1) 배송 목록 (위쪽으로 배치) -->
+                <!-- 배송 목록 -->
                 <div class="bg-white p-5 rounded-2xl shadow-sm border border-slate-200">
                     <div class="flex justify-between items-center border-b pb-2 mb-4">
                         <h2 class="text-base font-bold text-slate-800">
                             <span id="title-day" class="text-emerald-600">월요일</span> 배송 목록 (<span id="count-num">0</span>건)
                         </h2>
-                        <span class="text-xs text-slate-400">네비 버튼 클릭 시 바로 길안내</span>
+                        <span class="text-xs text-slate-400">⚡ 실시간 전체 공유 중</span>
                     </div>
 
                     <div id="list-container" class="flex flex-col gap-3 max-h-[600px] overflow-y-auto pr-1"></div>
                 </div>
 
-                <!-- 2) 배송지 추가 입력 폼 (아래쪽으로 배치) -->
+                <!-- 배송지 추가 -->
                 <div class="bg-white p-5 rounded-2xl shadow-sm border border-slate-200 flex flex-col gap-3">
                     <h2 class="text-base font-bold text-slate-800 border-b pb-2">
                         ➕ <span id="label-day" class="text-emerald-600">월요일</span> 배송지 신규 등록
@@ -76,17 +79,14 @@
                             <label class="block text-xs font-bold text-slate-500 mb-1">배송처명 *</label>
                             <input type="text" id="input-name" placeholder="예: 효사랑 나눔의집" class="w-full px-3 py-2 border rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500">
                         </div>
-
                         <div>
                             <label class="block text-xs font-bold text-slate-500 mb-1">도로명 주소 *</label>
                             <input type="text" id="input-address" placeholder="예: 광주 남구 봉선로 45" class="w-full px-3 py-2 border rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500">
                         </div>
-
                         <div>
                             <label class="block text-xs font-bold text-slate-500 mb-1">연락처</label>
                             <input type="text" id="input-phone" placeholder="예: 062-123-4567" class="w-full px-3 py-2 border rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500">
                         </div>
-
                         <div>
                             <label class="block text-xs font-bold text-slate-500 mb-1">배송 물량 / 기본 품목</label>
                             <input type="text" id="input-item" placeholder="예: 식료품 상자 3개" class="w-full px-3 py-2 border rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500">
@@ -106,35 +106,25 @@
                         </button>
                     </div>
                 </div>
-
             </div>
         </div>
 
-        <!-- ==================== 2. 배송 특이사항 (캘린더) 섹션 ==================== -->
+        <!-- 2. 배송 특이사항 (캘린더) 섹션 -->
         <div id="section-calendar" class="hidden flex-col gap-5">
             <div class="grid grid-cols-1 md:grid-cols-3 gap-5">
-                
-                <!-- 좌측: 달력 컨트롤러 -->
                 <div class="bg-white p-5 rounded-2xl shadow-sm border border-slate-200">
                     <div class="flex justify-between items-center mb-4">
                         <button type="button" onclick="prevMonth()" class="px-3 py-1 bg-slate-100 hover:bg-slate-200 rounded-lg text-xs font-bold">◀ 이전달</button>
                         <h2 id="calendar-month-year" class="font-bold text-base text-slate-800">2026년 10월</h2>
                         <button type="button" onclick="nextMonth()" class="px-3 py-1 bg-slate-100 hover:bg-slate-200 rounded-lg text-xs font-bold">다음달 ▶</button>
                     </div>
-
-                    <!-- 요일 헤더 -->
                     <div class="grid grid-cols-7 gap-1 text-center text-xs font-bold text-slate-400 mb-2">
                         <span class="text-rose-500">일</span><span>월</span><span>화</span><span>수</span><span>목</span><span>금</span><span class="text-blue-500">토</span>
                     </div>
-
-                    <!-- 날짜 그리드 -->
                     <div id="calendar-days" class="grid grid-cols-7 gap-1 text-center text-xs"></div>
                 </div>
 
-                <!-- 우측: 선택 날짜 특이사항 작성 및 전체 메모 목록 -->
                 <div class="md:col-span-2 flex flex-col gap-5">
-                    
-                    <!-- 특정 날짜 메모 입력 폼 -->
                     <div class="bg-white p-5 rounded-2xl shadow-sm border border-slate-200 flex flex-col gap-3">
                         <h3 class="font-bold text-sm text-slate-800 border-b pb-2 flex justify-between items-center">
                             <span>📝 <span id="selected-date-label" class="text-emerald-600">날짜를 선택하세요</span> 현장 특이사항</span>
@@ -142,54 +132,79 @@
                         <textarea id="calendar-note-input" rows="3" placeholder="해당 날짜의 주요 특이사항, 배송지 이슈, 물량 변경건 등을 자유롭게 기록하세요..." class="w-full p-3 border rounded-xl text-xs focus:outline-none focus:ring-2 focus:ring-emerald-500"></textarea>
                         <div class="flex gap-2 justify-end">
                             <button type="button" onclick="saveCalendarNote()" class="bg-emerald-600 hover:bg-emerald-700 text-white font-bold px-4 py-2 rounded-xl text-xs">
-                                특이사항 저장
+                                특이사항 실시간 저장
                             </button>
                         </div>
                     </div>
 
-                    <!-- 기록된 전체 특이사항 목록 -->
                     <div class="bg-white p-5 rounded-2xl shadow-sm border border-slate-200 flex flex-col gap-3">
                         <h3 class="font-bold text-sm text-slate-800 border-b pb-2">📋 등록된 전체 특이사항 기록부</h3>
                         <div id="calendar-notes-list" class="flex flex-col gap-2 max-h-[350px] overflow-y-auto pr-1"></div>
                     </div>
-
                 </div>
-
             </div>
         </div>
-
     </div>
 
     <script>
-        // --- 전역 데이터 구조 ---
+        // 1. Firebase 발급 정보 입력 (본인 프로젝트 값으로 교체)
+        const firebaseConfig = {
+            apiKey: "YOUR_API_KEY",
+            authDomain: "YOUR_PROJECT_ID.firebaseapp.com",
+            databaseURL: "https://YOUR_PROJECT_ID-default-rtdb.firebaseio.com",
+            projectId: "YOUR_PROJECT_ID",
+            storageBucket: "YOUR_PROJECT_ID.appspot.com",
+            messagingSenderId: "YOUR_SENDER_ID",
+            appId: "YOUR_APP_ID"
+        };
+
+        // Firebase 초기화
+        firebase.initializeApp(firebaseConfig);
+        const db = firebase.database();
+
+        // 전역 데이터
         let store = { '월': [], '화': [], '수': [], '목': [], '금': [] };
-        let calendarNotes = {}; // {'YYYY-MM-DD': '메모내용'}
+        let calendarNotes = {};
         let currentDay = '월';
         let activeMainTab = 'delivery';
 
-        // 캘린더 상태 변수
         let today = new Date();
         let calYear = today.getFullYear();
-        let calMonth = today.getMonth(); // 0~11
+        let calMonth = today.getMonth();
         let selectedDateStr = formatDate(today.getFullYear(), today.getMonth() + 1, today.getDate());
 
-        // --- 초기화 ---
+        // --- Firebase 실시간 데이터 동기화 감지 ---
         window.addEventListener('DOMContentLoaded', () => {
-            const localData = localStorage.getItem('fb_planner_data');
-            if (localData) {
-                try { store = JSON.parse(localData); } catch(e){}
-            }
-            const localCalData = localStorage.getItem('fb_calendar_notes');
-            if (localCalData) {
-                try { calendarNotes = JSON.parse(localCalData); } catch(e){}
-            }
-            
+            // 배송 데이터 실시간 수신
+            db.ref('delivery_store').on('value', (snapshot) => {
+                const data = snapshot.val();
+                if (data) {
+                    store = data;
+                } else {
+                    store = { '월': [], '화': [], '수': [], '목': [], '금': [] };
+                }
+                renderDelivery();
+            });
+
+            // 캘린더 메모 데이터 실시간 수신
+            db.ref('calendar_notes').on('value', (snapshot) => {
+                const data = snapshot.val();
+                calendarNotes = data || {};
+                renderCalendar();
+                selectCalendarDate(selectedDateStr);
+            });
+
             changeDay('월');
-            renderCalendar();
-            selectCalendarDate(selectedDateStr);
         });
 
-        // --- 상위 메인 탭 전환 ---
+        function saveStoreToFirebase() {
+            db.ref('delivery_store').set(store);
+        }
+
+        function saveCalendarToFirebase() {
+            db.ref('calendar_notes').set(calendarNotes);
+        }
+
         function switchMainTab(tab) {
             activeMainTab = tab;
             const delSec = document.getElementById('section-delivery');
@@ -209,9 +224,6 @@
                 delBtn.className = "flex-1 py-3 rounded-xl font-bold text-sm text-center transition text-slate-600 hover:text-slate-900";
             }
         }
-
-        // --- 배송 데이터 관리 로직 ---
-        function saveStore() { localStorage.setItem('fb_planner_data', JSON.stringify(store)); }
 
         function changeDay(day) {
             currentDay = day;
@@ -250,35 +262,34 @@
 
             if (!store[currentDay]) store[currentDay] = [];
             store[currentDay].push(itemData);
-            saveStore();
+            saveStoreToFirebase();
 
             document.getElementById('input-name').value = '';
             document.getElementById('input-address').value = '';
             document.getElementById('input-phone').value = '';
             document.getElementById('input-item').value = '';
-            renderDelivery();
         }
 
         function toggleDone(id) {
             const target = store[currentDay].find(x => x.id === id);
-            if (target) { target.done = !target.done; saveStore(); renderDelivery(); }
+            if (target) { target.done = !target.done; saveStoreToFirebase(); }
         }
 
         function updateMemo(id, text) {
             const target = store[currentDay].find(x => x.id === id);
-            if (target) { target.memo = text; saveStore(); }
+            if (target) { target.memo = text; saveStoreToFirebase(); }
         }
 
         function deleteItem(id) {
             store[currentDay] = store[currentDay].filter(x => x.id !== id);
-            saveStore(); renderDelivery();
+            saveStoreToFirebase();
         }
 
         function handleReset() {
             if (!store[currentDay] || store[currentDay].length === 0) return;
             if (confirm(`${currentDay}요일 배송 상태를 모두 '대기'로 되돌리시겠습니까?`)) {
                 store[currentDay].forEach(x => x.done = false);
-                saveStore(); renderDelivery();
+                saveStoreToFirebase();
             }
         }
 
@@ -286,7 +297,7 @@
             if (!store[currentDay] || store[currentDay].length === 0) return;
             if (confirm(`정말로 ${currentDay}요일의 모든 배송지를 삭제하시겠습니까?`)) {
                 store[currentDay] = [];
-                saveStore(); renderDelivery();
+                saveStoreToFirebase();
             }
         }
 
@@ -353,11 +364,6 @@
             container.innerHTML = html;
         }
 
-        // --- 캘린더 로직 ---
-        function saveCalendarStore() {
-            localStorage.setItem('fb_calendar_notes', JSON.stringify(calendarNotes));
-        }
-
         function formatDate(y, m, d) {
             const mm = m < 10 ? '0' + m : m;
             const dd = d < 10 ? '0' + d : d;
@@ -384,14 +390,12 @@
             const firstDay = new Date(calYear, calMonth, 1).getDay();
             const lastDate = new Date(calYear, calMonth + 1, 0).getDate();
 
-            // 공백 셀
             for (let i = 0; i < firstDay; i++) {
                 const emptyCell = document.createElement('div');
                 emptyCell.className = "h-9";
                 daysContainer.appendChild(emptyCell);
             }
 
-            // 날짜 셀
             for (let date = 1; date <= lastDate; date++) {
                 const dateStr = formatDate(calYear, calMonth + 1, date);
                 const isSelected = dateStr === selectedDateStr;
@@ -437,25 +441,23 @@
             } else {
                 delete calendarNotes[selectedDateStr];
             }
-            saveCalendarStore();
-            renderCalendar();
-            alert(`${selectedDateStr} 특이사항이 저장되었습니다.`);
+            saveCalendarToFirebase();
+            alert(`${selectedDateStr} 특이사항이 공유 저장되었습니다.`);
         }
 
         function deleteCalendarNote(dateStr) {
             if (confirm(`${dateStr} 특이사항을 삭제하시겠습니까?`)) {
                 delete calendarNotes[dateStr];
-                saveCalendarStore();
+                saveCalendarToFirebase();
                 if (selectedDateStr === dateStr) {
                     document.getElementById('calendar-note-input').value = '';
                 }
-                renderCalendar();
             }
         }
 
         function renderCalendarNotesList() {
             const listContainer = document.getElementById('calendar-notes-list');
-            const dates = Object.keys(calendarNotes).sort().reverse(); // 최근 날짜 순 정렬
+            const dates = Object.keys(calendarNotes).sort().reverse();
 
             if (dates.length === 0) {
                 listContainer.innerHTML = `
