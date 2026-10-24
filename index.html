@@ -37,7 +37,7 @@
             </div>
         </header>
 
-        <!-- 메인 탭 (배송 업무 통합 뷰 vs 특이사항 캘린더) -->
+        <!-- 메인 탭 -->
         <div class="flex gap-2 mb-6 bg-slate-200 p-1.5 rounded-2xl">
             <button type="button" onclick="switchMainTab('delivery')" id="main-tab-delivery" class="flex-1 py-3 rounded-xl font-bold text-sm text-center transition bg-white text-emerald-700 shadow-sm">
                 🚛 주간 배송 & 실시간 지도 동선
@@ -83,7 +83,7 @@
                 <div id="map" class="w-full h-[380px] rounded-xl border border-slate-200"></div>
             </div>
 
-            <!-- 3) 배송 목록 -->
+            <!-- 3) 요일별 배송 동선 목록 -->
             <div class="bg-white p-5 rounded-2xl shadow-sm border border-slate-200">
                 <div class="flex justify-between items-center border-b pb-2 mb-4">
                     <h2 class="text-base font-bold text-slate-800">
@@ -94,21 +94,21 @@
                 <div id="list-container" class="flex flex-col gap-3 max-h-[500px] overflow-y-auto pr-1"></div>
             </div>
 
-            <!-- 4) 전체 등록된 배송지 목록 (클릭 한 번으로 특정 요일에 추가) -->
+            <!-- 4) 전체 배송지 모음 (클릭 시 원하는 요일 동선에 추가) -->
             <div class="bg-white p-5 rounded-2xl shadow-sm border border-slate-200 flex flex-col gap-3">
                 <div class="flex justify-between items-center border-b pb-2">
                     <h2 class="text-base font-bold text-slate-800">
-                        ⭐ 등록된 배송지 전체 목록 (원하는 요일에 바로 추가)
+                        ⭐ 등록된 배송지 모음 (원하는 요일에 배정)
                     </h2>
                     <span class="text-xs text-slate-400">전 직원 공용 저장소</span>
                 </div>
                 <div id="registered-places-container" class="grid grid-cols-1 md:grid-cols-2 gap-2.5 max-h-[250px] overflow-y-auto pr-1"></div>
             </div>
 
-            <!-- 5) 신규 배송지 등록 전용 입력란 -->
+            <!-- 5) 신규 배송지 등록 전용 입력란 (저장소에만 추가) -->
             <div class="bg-white p-5 rounded-2xl shadow-sm border border-slate-200 flex flex-col gap-3">
                 <h2 class="text-base font-bold text-slate-800 border-b pb-2">
-                    ➕ 신규 배송지 등록란 (저장소 신규 추가)
+                    ➕ 배송지 신규 등록
                 </h2>
 
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
@@ -131,8 +131,8 @@
                 </div>
 
                 <div class="flex gap-2 mt-1">
-                    <button type="button" onclick="handleRegisterNewPlace()" class="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-2.5 px-4 rounded-xl text-sm transition shadow-sm">
-                        + 전체 배송지 목록에 등록하기
+                    <button type="button" onclick="handleRegisterNewPlaceOnly()" class="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-2.5 px-4 rounded-xl text-sm transition shadow-sm">
+                        + 배송지 모음에 등록하기
                     </button>
                 </div>
 
@@ -202,7 +202,7 @@
         const db = firebase.database();
 
         let store = { '월': [], '화': [], '수': [], '목': [], '금': [] };
-        let registeredPlaces = []; // 전체 배송지 저장소 목록
+        let registeredPlaces = []; // 전체 배송지 모음 (공용 DB)
         let calendarNotes = {};
         let currentDay = '월';
 
@@ -341,8 +341,8 @@
         function saveRegisteredPlacesToFirebase() { db.ref('registered_places').set(registeredPlaces); }
         function saveCalendarToFirebase() { db.ref('calendar_notes').set(calendarNotes); }
 
-        // 신규 배송지 등록 (전체 배송지 저장소로 추가)
-        function handleRegisterNewPlace() {
+        // [순수 역할 1] 하단 폼: 오직 '배송지 모음'에만 신규 등록
+        function handleRegisterNewPlaceOnly() {
             const name = document.getElementById('input-name').value.trim();
             const address = document.getElementById('input-address').value.trim();
             const phone = document.getElementById('input-phone').value.trim();
@@ -365,10 +365,10 @@
             document.getElementById('input-address').value = '';
             document.getElementById('input-phone').value = '';
             document.getElementById('input-item').value = '';
-            alert('전체 배송지 목록에 등록되었습니다! 상단 목록에서 버튼 클릭으로 원하는 요일에 추가할 수 있습니다.');
+            alert(`'${name}' 배송지가 '배송지 모음'에 추가되었습니다!\n상단 모음 목록에서 요일 버튼을 클릭하여 동선에 배치하세요.`);
         }
 
-        // 전체 배송지 목록에서 특정 요일 동선에 클릭 한 번으로 추가
+        // [순수 역할 2] 배송지 모음에서 요일 클릭 시 해당 요일 동선에 배정
         function addPlaceToDay(place, day) {
             const itemData = {
                 id: Date.now(),
@@ -383,20 +383,21 @@
             if (!store[day]) store[day] = [];
             store[day].push(itemData);
             saveStoreToFirebase();
-            alert(`'${place.name}' 배송지가 ${day}요일 동선에 추가되었습니다!`);
+            alert(`'${place.name}' 배송지가 ${day}요일 동선에 배정되었습니다!`);
         }
 
         function deleteRegisteredPlace(id) {
-            if (confirm('이 배송지를 전체 저장소에서 삭제하시겠습니까?')) {
+            if (confirm('이 배송지를 저장소 모음에서 완전히 삭제하시겠습니까?')) {
                 registeredPlaces = registeredPlaces.filter(x => x.id !== id);
                 saveRegisteredPlacesToFirebase();
             }
         }
 
+        // 배송지 모음 목록 랜더링
         function renderRegisteredPlaces() {
             const container = document.getElementById('registered-places-container');
             if (registeredPlaces.length === 0) {
-                container.innerHTML = `<div class="text-slate-400 text-xs col-span-2 py-4 text-center bg-slate-50 rounded-xl border border-dashed">등록된 배송지가 없습니다. 하단 양식에서 배송지를 등록해 보세요!</div>`;
+                container.innerHTML = `<div class="text-slate-400 text-xs col-span-2 py-4 text-center bg-slate-50 rounded-xl border border-dashed">등록된 배송지가 없습니다. 하단 [배송지 신규 등록]에서 등록해 보세요!</div>`;
                 return;
             }
 
@@ -409,10 +410,10 @@
                                 <h4 class="font-bold text-xs text-slate-800 truncate">${place.name}</h4>
                                 <p class="text-[11px] text-slate-500 truncate">📍 ${place.address}</p>
                             </div>
-                            <button type="button" onclick="deleteRegisteredPlace(${place.id})" class="text-slate-400 hover:text-rose-500 text-xs font-bold px-1">✕</button>
+                            <button type="button" onclick="deleteRegisteredPlace(${place.id})" class="text-slate-400 hover:text-rose-500 text-xs font-bold px-1" title="모음에서 삭제">✕</button>
                         </div>
                         <div class="flex items-center justify-between border-t border-slate-200 pt-2 gap-1">
-                            <span class="text-[11px] font-bold text-slate-400">요일 추가:</span>
+                            <span class="text-[11px] font-bold text-slate-500">동선 배정:</span>
                             <div class="flex gap-1">
                                 <button type="button" onclick="addPlaceToDay(${JSON.stringify(place).replace(/"/g, '&quot;')}, '월')" class="bg-emerald-100 hover:bg-emerald-600 hover:text-white text-emerald-800 font-bold text-xs px-2 py-0.5 rounded transition">월</button>
                                 <button type="button" onclick="addPlaceToDay(${JSON.stringify(place).replace(/"/g, '&quot;')}, '화')" class="bg-emerald-100 hover:bg-emerald-600 hover:text-white text-emerald-800 font-bold text-xs px-2 py-0.5 rounded transition">화</button>
@@ -511,7 +512,7 @@
             }
 
             if (list.length === 0) {
-                container.innerHTML = `<div class="text-center py-12 text-slate-400 text-sm bg-slate-50 rounded-xl border border-dashed border-slate-200">📍 ${currentDay}요일에 등록된 배송지가 없습니다.<br>아래 전체 배송지 목록에서 원하시는 요일을 눌러 추가해 보세요!</div>`;
+                container.innerHTML = `<div class="text-center py-12 text-slate-400 text-sm bg-slate-50 rounded-xl border border-dashed border-slate-200">📍 ${currentDay}요일에 배정된 배송지가 없습니다.<br>아래 [등록된 배송지 모음]에서 요일 버튼을 눌러 동선에 추가해 보세요!</div>`;
                 return;
             }
 
