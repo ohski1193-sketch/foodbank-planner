@@ -5,18 +5,15 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>푸드뱅크 통합 배송 & 특이사항 플래너</title>
 
-    <!-- PWABuilder 웹앱 매니페스트 연결 -->
     <link rel="manifest" href="manifest.json">
-
-    <!-- Tailwind CSS CDN -->
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Pretendard:wght@400;600;700&display=swap" rel="stylesheet">
     
-    <!-- Firebase SDK (v9 호환 모듈) -->
+    <!-- Firebase SDK -->
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
 
-    <!-- 카카오 지도 API (전달받으신 JavaScript API 키 적용) -->
+    <!-- 카카오 지도 API -->
     <script type="text/javascript" src="//dapi.kakao.com/v2/maps/sdk.js?appkey=bb4ed44dd682ef912b4c09ba8b10845f&libraries=services"></script>
 
     <style>
@@ -30,14 +27,14 @@
         <header class="bg-emerald-600 text-white p-5 rounded-2xl shadow-md mb-5 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
             <div>
                 <h1 class="text-2xl font-bold">🚚 푸드뱅크 실시간 스마트 관리</h1>
-                <p class="text-emerald-100 text-xs mt-1">전직원 실시간 동기화 주간 배송지 및 지도 동선 플래너</p>
+                <p class="text-emerald-100 text-xs mt-1">전직원 실시간 동기화 주간 배송지 및 스마트 동선 플래너</p>
             </div>
             <div id="header-badge" class="bg-emerald-700 px-4 py-2 rounded-xl text-xs font-semibold">
                 진행률: 0 / 0건 (0%)
             </div>
         </header>
 
-        <!-- 메인 탭 (배송 목록 / 지도 동선 / 캘린더) -->
+        <!-- 메인 탭 -->
         <div class="flex gap-2 mb-6 bg-slate-200 p-1.5 rounded-2xl">
             <button type="button" onclick="switchMainTab('delivery')" id="main-tab-delivery" class="flex-1 py-3 rounded-xl font-bold text-xs sm:text-sm text-center transition bg-white text-emerald-700 shadow-sm">
                 🚛 주간 배송 목록
@@ -74,22 +71,32 @@
                     </button>
                 </div>
 
-                <!-- 배송 목록 -->
+                <!-- 1) 배송 목록 (위쪽) -->
                 <div class="bg-white p-5 rounded-2xl shadow-sm border border-slate-200">
                     <div class="flex justify-between items-center border-b pb-2 mb-4">
                         <h2 class="text-base font-bold text-slate-800">
                             <span id="title-day" class="text-emerald-600">월요일</span> 배송 목록 (<span id="count-num">0</span>건)
                         </h2>
-                        <span class="text-xs text-slate-400">⚡ 실시간 전체 공유 중</span>
+                        <span class="text-xs text-slate-400">⚡ 순서 변경 및 실시간 공유 가능</span>
                     </div>
-
                     <div id="list-container" class="flex flex-col gap-3 max-h-[600px] overflow-y-auto pr-1"></div>
                 </div>
 
-                <!-- 배송지 신규 등록 폼 -->
+                <!-- 2) 자주 가는 배송지(공유 풀)에서 원클릭 추가 -->
+                <div class="bg-white p-5 rounded-2xl shadow-sm border border-slate-200 flex flex-col gap-3">
+                    <h2 class="text-base font-bold text-slate-800 border-b pb-2 flex justify-between items-center">
+                        <span>⭐ 자주 가는 배송지 모음 (클릭해서 동선에 추가)</span>
+                        <span class="text-xs text-slate-400">전 직원 공용 풀</span>
+                    </h2>
+                    <div id="favorites-container" class="grid grid-cols-1 sm:grid-cols-2 gap-2 max-h-[200px] overflow-y-auto pr-1">
+                        <!-- 동적으로 로드됨 -->
+                    </div>
+                </div>
+
+                <!-- 3) 배송지 신규 등록 폼 (아래쪽) -->
                 <div class="bg-white p-5 rounded-2xl shadow-sm border border-slate-200 flex flex-col gap-3">
                     <h2 class="text-base font-bold text-slate-800 border-b pb-2">
-                        ➕ <span id="label-day" class="text-emerald-600">월요일</span> 배송지 신규 등록
+                        ➕ <span id="label-day" class="text-emerald-600">월요일</span> 배송지 신규 등록 및 상시 저장
                     </h2>
 
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
@@ -111,9 +118,11 @@
                         </div>
                     </div>
 
-                    <button type="button" onclick="handleAdd()" class="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-2.5 rounded-xl text-sm transition shadow-sm mt-1">
-                        + <span id="btn-day-name">월요일</span> 목록에 추가
-                    </button>
+                    <div class="flex gap-2 mt-1">
+                        <button type="button" onclick="handleAddAndAssign()" class="flex-2 bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-2.5 px-4 rounded-xl text-sm transition shadow-sm">
+                            + <span id="btn-day-name">월요일</span> 동선 및 상시 목록에 추가
+                        </button>
+                    </div>
 
                     <div class="border-t pt-3 mt-1 flex gap-2">
                         <button type="button" onclick="handleReset()" class="flex-1 bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 rounded-xl text-xs transition">
@@ -129,19 +138,30 @@
 
         <!-- ==================== 2. 지도 동선 현황 섹션 ==================== -->
         <div id="section-map" class="hidden flex-col gap-5">
+            <!-- 지도 탭 상단 다음 목적지 배너 -->
+            <div id="map-next-banner" class="bg-emerald-50 border border-emerald-200 p-4 rounded-2xl flex justify-between items-center hidden">
+                <div>
+                    <span class="text-xs text-emerald-600 font-bold">📍 지도에서 바로 다음 목적지 안내</span>
+                    <h3 id="map-next-name" class="text-base font-bold text-slate-800">배송처 이름</h3>
+                    <p id="map-next-addr" class="text-xs text-slate-500">주소 정보</p>
+                </div>
+                <button type="button" id="map-next-navi-btn" class="bg-emerald-600 text-white font-bold text-xs px-4 py-2.5 rounded-xl shadow-sm hover:bg-emerald-700 transition">
+                    🚀 카카오내비
+                </button>
+            </div>
+
             <div class="bg-white p-5 rounded-2xl shadow-sm border border-slate-200 flex flex-col gap-3">
                 <div class="flex justify-between items-center border-b pb-2">
                     <h2 class="text-base font-bold text-slate-800">
                         🗺️ <span id="map-day-title" class="text-emerald-600">월요일</span> 전체 배송 동선 지도
                     </h2>
-                    <span class="text-xs text-slate-400">등록된 주소지 마커 표시</span>
+                    <span class="text-xs text-slate-400">마커를 클릭하면 상세 정보 확인 가능</span>
                 </div>
-                <!-- 지도 표시 영역 -->
                 <div id="map" class="w-full h-[450px] rounded-xl border border-slate-200"></div>
             </div>
         </div>
 
-        <!-- ==================== 3. 배송 특이사항 (캘린더) 섹션 ==================== -->
+        <!-- ==================== 3. 배송 특이사항 섹션 ==================== -->
         <div id="section-calendar" class="hidden flex-col gap-5">
             <div class="grid grid-cols-1 md:grid-cols-3 gap-5">
                 <div class="bg-white p-5 rounded-2xl shadow-sm border border-slate-200">
@@ -161,7 +181,7 @@
                         <h3 class="font-bold text-sm text-slate-800 border-b pb-2 flex justify-between items-center">
                             <span>📝 <span id="selected-date-label" class="text-emerald-600">날짜를 선택하세요</span> 현장 특이사항</span>
                         </h3>
-                        <textarea id="calendar-note-input" rows="3" placeholder="해당 날짜의 주요 특이사항, 배송지 이슈, 물량 변경건 등을 자유롭게 기록하세요..." class="w-full p-3 border rounded-xl text-xs focus:outline-none focus:ring-2 focus:ring-emerald-500"></textarea>
+                        <textarea id="calendar-note-input" rows="3" placeholder="해당 날짜의 주요 특이사항, 배송지 이슈 등을 자유롭게 기록하세요..." class="w-full p-3 border rounded-xl text-xs focus:outline-none focus:ring-2 focus:ring-emerald-500"></textarea>
                         <div class="flex gap-2 justify-end">
                             <button type="button" onclick="saveCalendarNote()" class="bg-emerald-600 hover:bg-emerald-700 text-white font-bold px-4 py-2 rounded-xl text-xs">
                                 특이사항 실시간 저장
@@ -180,7 +200,6 @@
     </div>
 
     <script>
-        // Firebase 설정 정보
         const firebaseConfig = {
             apiKey: "AIzaSyAe6NjvfbsGlaXcA3Z3ncEihHpP2CGtPgo",
             authDomain: "najufoodbank.firebaseapp.com",
@@ -195,6 +214,7 @@
         const db = firebase.database();
 
         let store = { '월': [], '화': [], '수': [], '목': [], '금': [] };
+        let favoritePlaces = []; // 자주 가는 배송지 공용 풀
         let calendarNotes = {};
         let currentDay = '월';
         let activeMainTab = 'delivery';
@@ -210,10 +230,14 @@
 
         window.addEventListener('DOMContentLoaded', () => {
             db.ref('delivery_store').on('value', (snapshot) => {
-                const data = snapshot.val();
-                store = data || { '월': [], '화': [], '수': [], '목': [], '금': [] };
+                store = snapshot.val() || { '월': [], '화': [], '수': [], '목': [], '금': [] };
                 renderDelivery();
                 if (activeMainTab === 'map') renderMap();
+            });
+
+            db.ref('favorite_places').on('value', (snapshot) => {
+                favoritePlaces = snapshot.val() || [];
+                renderFavorites();
             });
 
             db.ref('calendar_notes').on('value', (snapshot) => {
@@ -295,11 +319,7 @@
                 geocoder.addressSearch(item.address, function(result, status) {
                     if (status === kakao.maps.services.Status.OK) {
                         const coords = new kakao.maps.LatLng(result[0].y, result[0].x);
-
-                        const marker = new kakao.maps.Marker({
-                            map: map,
-                            position: coords
-                        });
+                        const marker = new kakao.maps.Marker({ map: map, position: coords });
                         mapMarkers.push(marker);
                         bounds.extend(coords);
 
@@ -309,7 +329,6 @@
                         kakao.maps.event.addListener(marker, 'click', function() {
                             infowindow.open(map, marker);
                         });
-
                         map.setBounds(bounds);
                     }
                 });
@@ -317,9 +336,11 @@
         }
 
         function saveStoreToFirebase() { db.ref('delivery_store').set(store); }
+        function saveFavoritesToFirebase() { db.ref('favorite_places').set(favoritePlaces); }
         function saveCalendarToFirebase() { db.ref('calendar_notes').set(calendarNotes); }
 
-        function handleAdd() {
+        // 하단 폼에서 입력 시 -> 오늘 요일 동선 추가 + 자주 가는 배송지(공용풀)에 자동 상시 등록
+        function handleAddAndAssign() {
             const name = document.getElementById('input-name').value.trim();
             const address = document.getElementById('input-address').value.trim();
             const phone = document.getElementById('input-phone').value.trim();
@@ -337,14 +358,88 @@
                 done: false
             };
 
+            // 1. 오늘 요일 동선에 추가
             if (!store[currentDay]) store[currentDay] = [];
             store[currentDay].push(itemData);
             saveStoreToFirebase();
+
+            // 2. 자주 가는 배송지 공용 풀에 중복이 없다면 추가
+            if (!favoritePlaces.some(x => x.name === name && x.address === address)) {
+                favoritePlaces.push({ name, address, phone, item });
+                saveFavoritesToFirebase();
+            }
 
             document.getElementById('input-name').value = '';
             document.getElementById('input-address').value = '';
             document.getElementById('input-phone').value = '';
             document.getElementById('input-item').value = '';
+        }
+
+        // 자주 가는 배송지 목록에서 클릭 한 번으로 오늘 동선에 추가
+        function addFavoriteToCurrentDay(fav) {
+            const itemData = {
+                id: Date.now(),
+                name: fav.name,
+                address: fav.address,
+                phone: fav.phone || '연락처 없음',
+                item: fav.item || '기본 물량',
+                memo: '',
+                done: false
+            };
+            if (!store[currentDay]) store[currentDay] = [];
+            store[currentDay].push(itemData);
+            saveStoreToFirebase();
+        }
+
+        function renderFavorites() {
+            const container = document.getElementById('favorites-container');
+            if (favoritePlaces.length === 0) {
+                container.innerHTML = `<div class="text-slate-400 text-xs col-span-2 py-3 text-center">등록된 상시 배송지가 없습니다. 아래에서 신규 등록하면 여기에 자동 저장됩니다!</div>`;
+                return;
+            }
+            let html = '';
+            favoritePlaces.forEach((fav, idx) => {
+                html += `
+                    <div class="p-2.5 bg-slate-50 border border-slate-200 rounded-xl flex justify-between items-center gap-2">
+                        <div class="overflow-hidden">
+                            <h4 class="font-bold text-xs text-slate-800 truncate">${fav.name}</h4>
+                            <p class="text-[11px] text-slate-500 truncate">${fav.address}</p>
+                        </div>
+                        <button type="button" onclick="addFavoriteToCurrentDay(${JSON.stringify(fav).replace(/"/g, '&quot;')})" class="bg-emerald-100 hover:bg-emerald-200 text-emerald-800 font-bold text-xs px-2.5 py-1.5 rounded-lg whitespace-nowrap transition">
+                            + 오늘 동선에 넣기
+                        </button>
+                    </div>
+                `;
+            });
+            container.innerHTML = html;
+        }
+
+        // 순서 위로/아래로 이동
+        function moveItem(index, direction) {
+            const list = store[currentDay];
+            const targetIdx = index + direction;
+            if (targetIdx < 0 || targetIdx >= list.length) return;
+            const temp = list[index];
+            list[index] = list[targetIdx];
+            list[targetIdx] = temp;
+            saveStoreToFirebase();
+        }
+
+        // 다른 요일로 이동
+        function moveItemToAnotherDay(index) {
+            const days = ['월', '화', '수', '목', '금'];
+            const targetDay = prompt(`어느 요일로 이동하시겠습니까? (입력 예: 월, 화, 수, 목, 금)`, currentDay === '월' ? '화' : '월');
+            if (!targetDay || !days.includes(targetDay)) {
+                if (targetDay) alert('올바른 요일(월, 화, 수, 목, 금)을 입력해주세요.');
+                return;
+            }
+            if (targetDay === currentDay) return;
+
+            const item = store[currentDay].splice(index, 1)[0];
+            if (!store[targetDay]) store[targetDay] = [];
+            store[targetDay].push(item);
+            saveStoreToFirebase();
+            alert(`${targetDay}요일로 이동되었습니다!`);
         }
 
         function toggleDone(id) {
@@ -395,20 +490,34 @@
             const pct = totalCount > 0 ? Math.round((doneCount / totalCount) * 100) : 0;
             document.getElementById('header-badge').textContent = `진행률: ${doneCount} / ${totalCount}건 (${pct}%)`;
 
-            // 다음 목적지 배너 업데이트
+            // 다음 목적지 배너 업데이트 (배송 탭 & 지도 탭 공용)
             const nextTarget = list.find(x => !x.done);
             const banner = document.getElementById('next-target-banner');
+            const mapBanner = document.getElementById('map-next-banner');
+
             if (nextTarget) {
+                const bannerHtml = `
+                    <div>
+                        <span class="text-xs text-emerald-600 font-bold">📍 다음 배송 목적지</span>
+                        <h3 class="text-base font-bold text-slate-800">${nextTarget.name}</h3>
+                        <p class="text-xs text-slate-500">${nextTarget.address}</p>
+                    </div>
+                    <button type="button" onclick="goNavi('kakao', '${nextTarget.address}')" class="bg-emerald-600 text-white font-bold text-xs px-4 py-2.5 rounded-xl shadow-sm hover:bg-emerald-700 transition">
+                        🚀 카카오내비
+                    </button>
+                `;
+                banner.innerHTML = bannerHtml;
                 banner.classList.remove('hidden');
-                document.getElementById('next-target-name').textContent = nextTarget.name;
-                document.getElementById('next-target-addr').textContent = nextTarget.address;
-                document.getElementById('next-target-navi-btn').onclick = () => goNavi('kakao', nextTarget.address);
+
+                mapBanner.innerHTML = bannerHtml;
+                mapBanner.classList.remove('hidden');
             } else {
                 banner.classList.add('hidden');
+                mapBanner.classList.add('hidden');
             }
 
             if (list.length === 0) {
-                container.innerHTML = `<div class="text-center py-16 text-slate-400 text-sm bg-slate-50 rounded-xl border border-dashed border-slate-200">📍 ${currentDay}요일에 등록된 배송지가 없습니다.</div>`;
+                container.innerHTML = `<div class="text-center py-16 text-slate-400 text-sm bg-slate-50 rounded-xl border border-dashed border-slate-200">📍 ${currentDay}요일에 등록된 배송지가 없습니다.<br>아래 자주 가는 배송지나 신규 등록을 이용해 보세요!</div>`;
                 return;
             }
 
@@ -421,11 +530,16 @@
                                 <span class="bg-emerald-600 text-white w-5 h-5 rounded-full flex items-center justify-center text-xs font-bold">${index + 1}</span>
                                 <h3 class="font-bold text-slate-800 text-sm ${item.done ? 'line-through text-slate-500' : ''}">${item.name}</h3>
                             </div>
-                            <div class="flex items-center gap-1.5">
-                                <button type="button" onclick="toggleDone(${item.id})" class="text-xs px-2.5 py-1 rounded-lg font-bold ${item.done ? 'bg-emerald-600 text-white' : 'bg-amber-100 text-amber-800'}">
-                                    ${item.done ? '✓ 완료됨' : '⏳ 배송대기'}
+                            <div class="flex items-center gap-1">
+                                <!-- 순서 이동 및 요일 이동 버튼 -->
+                                <button type="button" onclick="moveItem(${index}, -1)" class="text-slate-400 hover:text-slate-700 text-xs px-1 font-bold" title="위로">▲</button>
+                                <button type="button" onclick="moveItem(${index}, 1)" class="text-slate-400 hover:text-slate-700 text-xs px-1 font-bold" title="아래로">▼</button>
+                                <button type="button" onclick="moveItemToAnotherDay(${index})" class="text-xs text-blue-600 hover:text-blue-800 font-bold px-1.5 py-0.5 bg-blue-50 rounded" title="다른 요일로 이동">요일이동</button>
+                                
+                                <button type="button" onclick="toggleDone(${item.id})" class="text-xs px-2 py-1 rounded-lg font-bold ${item.done ? 'bg-emerald-600 text-white' : 'bg-amber-100 text-amber-800'}">
+                                    ${item.done ? '✓ 완료' : '⏳ 대기'}
                                 </button>
-                                <button type="button" onclick="deleteItem(${item.id})" class="text-slate-400 hover:text-rose-500 text-xs font-bold px-1 py-0.5">✕</button>
+                                <button type="button" onclick="deleteItem(${item.id})" class="text-slate-400 hover:text-rose-500 text-xs font-bold px-1">✕</button>
                             </div>
                         </div>
                         <div class="text-xs text-slate-600 bg-slate-50 p-2 rounded-lg border border-slate-100 flex flex-col gap-0.5">
