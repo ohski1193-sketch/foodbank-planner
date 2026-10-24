@@ -10,5 +10,17 @@
   "theme_color": "#10b981",
   "id": "com.najufoodbank.app",
   "description": "나주시기초푸드뱅크 주간 배송지 관리 및 캘린더 특이사항 기록 시스템",
-  "lang": "ko"
+  "lang": "ko",
+  "icons": [
+    {
+      "src": "icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ]
 }
