@@ -1,0 +1,479 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>푸드뱅크 통합 배송 & 특이사항 플래너</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Pretendard:wght@400;600;700&display=swap" rel="stylesheet">
+    <style>
+        body { font-family: 'Pretendard', sans-serif; }
+    </style>
+</head>
+<body class="bg-slate-100 min-h-screen text-slate-800 pb-12">
+    <div class="max-w-5xl mx-auto p-4 sm:p-6">
+        
+        <!-- 상단 헤더 -->
+        <header class="bg-emerald-600 text-white p-5 rounded-2xl shadow-md mb-5 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
+            <div>
+                <h1 class="text-2xl font-bold">🚚 푸드뱅크 스마트 관리 시스템</h1>
+                <p class="text-emerald-100 text-xs mt-1">주간 고정 배송 동선 및 날짜별 현장 특이사항 캘린더</p>
+            </div>
+            <div id="header-badge" class="bg-emerald-700 px-4 py-2 rounded-xl text-xs font-semibold">
+                진행률: 0 / 0건 (0%)
+            </div>
+        </header>
+
+        <!-- 상위 메인 탭 (배송 업무 vs 특이사항 캘린더) -->
+        <div class="flex gap-3 mb-6 bg-slate-200 p-1.5 rounded-2xl">
+            <button type="button" onclick="switchMainTab('delivery')" id="main-tab-delivery" class="flex-1 py-3 rounded-xl font-bold text-sm text-center transition bg-white text-emerald-700 shadow-sm">
+                🚛 주간 배송 업무 플래너
+            </button>
+            <button type="button" onclick="switchMainTab('calendar')" id="main-tab-calendar" class="flex-1 py-3 rounded-xl font-bold text-sm text-center transition text-slate-600 hover:text-slate-900">
+                📅 배송 특이사항 (캘린더/메모)
+            </button>
+        </div>
+
+        <!-- ==================== 1. 주간 배송 업무 섹션 ==================== -->
+        <div id="section-delivery" class="flex flex-col gap-5">
+            <!-- 요일 선택 탭 -->
+            <div class="flex gap-2">
+                <button type="button" onclick="changeDay('월')" id="tab-월" class="day-btn flex-1 py-3 rounded-xl font-bold text-sm bg-white text-slate-600 shadow-sm border border-slate-200">월요일</button>
+                <button type="button" onclick="changeDay('화')" id="tab-화" class="day-btn flex-1 py-3 rounded-xl font-bold text-sm bg-white text-slate-600 shadow-sm border border-slate-200">화요일</button>
+                <button type="button" onclick="changeDay('수')" id="tab-수" class="day-btn flex-1 py-3 rounded-xl font-bold text-sm bg-white text-slate-600 shadow-sm border border-slate-200">수요일</button>
+                <button type="button" onclick="changeDay('목')" id="tab-목" class="day-btn flex-1 py-3 rounded-xl font-bold text-sm bg-white text-slate-600 shadow-sm border border-slate-200">목요일</button>
+                <button type="button" onclick="changeDay('금')" id="tab-금" class="day-btn flex-1 py-3 rounded-xl font-bold text-sm bg-white text-slate-600 shadow-sm border border-slate-200">금요일</button>
+            </div>
+
+            <!-- 배송 레이아웃 -->
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-5">
+                <!-- 입력 폼 -->
+                <div class="bg-white p-5 rounded-2xl shadow-sm border border-slate-200 flex flex-col gap-3 h-fit">
+                    <h2 class="text-base font-bold text-slate-800 border-b pb-2">
+                        <span id="label-day" class="text-emerald-600">월요일</span> 배송지 추가
+                    </h2>
+
+                    <div>
+                        <label class="block text-xs font-bold text-slate-500 mb-1">배송처명 *</label>
+                        <input type="text" id="input-name" placeholder="예: 효사랑 나눔의집" class="w-full px-3 py-2 border rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500">
+                    </div>
+
+                    <div>
+                        <label class="block text-xs font-bold text-slate-500 mb-1">도로명 주소 *</label>
+                        <input type="text" id="input-address" placeholder="예: 광주 남구 봉선로 45" class="w-full px-3 py-2 border rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500">
+                    </div>
+
+                    <div>
+                        <label class="block text-xs font-bold text-slate-500 mb-1">연락처</label>
+                        <input type="text" id="input-phone" placeholder="예: 062-123-4567" class="w-full px-3 py-2 border rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500">
+                    </div>
+
+                    <div>
+                        <label class="block text-xs font-bold text-slate-500 mb-1">배송 물량 / 기본 품목</label>
+                        <input type="text" id="input-item" placeholder="예: 식료품 상자 3개" class="w-full px-3 py-2 border rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500">
+                    </div>
+
+                    <button type="button" onclick="handleAdd()" class="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-2.5 rounded-xl text-sm transition shadow-sm mt-1">
+                        + <span id="btn-day-name">월요일</span> 목록에 추가
+                    </button>
+
+                    <div class="border-t pt-3 mt-2 flex flex-col gap-2">
+                        <button type="button" onclick="handleReset()" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 rounded-xl text-xs transition">
+                            🔄 오늘 일정 완료 (배송대기로 초기화)
+                        </button>
+                        <button type="button" onclick="handleDeleteAll()" class="w-full bg-slate-100 hover:bg-slate-200 text-slate-500 font-medium py-1.5 rounded-xl text-xs transition">
+                            이 요일 배송지 전체 삭제
+                        </button>
+                    </div>
+                </div>
+
+                <!-- 배송 목록 -->
+                <div class="md:col-span-2 bg-white p-5 rounded-2xl shadow-sm border border-slate-200">
+                    <div class="flex justify-between items-center border-b pb-2 mb-4">
+                        <h2 class="text-base font-bold text-slate-800">
+                            <span id="title-day" class="text-emerald-600">월요일</span> 배송 목록 (<span id="count-num">0</span>건)
+                        </h2>
+                        <span class="text-xs text-slate-400">네비 버튼 클릭 시 바로 길안내</span>
+                    </div>
+
+                    <div id="list-container" class="flex flex-col gap-3 max-h-[600px] overflow-y-auto pr-1"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ==================== 2. 배송 특이사항 (캘린더) 섹션 ==================== -->
+        <div id="section-calendar" class="hidden flex-col gap-5">
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-5">
+                
+                <!-- 좌측: 달력 컨트롤러 -->
+                <div class="bg-white p-5 rounded-2xl shadow-sm border border-slate-200">
+                    <div class="flex justify-between items-center mb-4">
+                        <button type="button" onclick="prevMonth()" class="px-3 py-1 bg-slate-100 hover:bg-slate-200 rounded-lg text-xs font-bold">◀ 이전달</button>
+                        <h2 id="calendar-month-year" class="font-bold text-base text-slate-800">2026년 10월</h2>
+                        <button type="button" onclick="nextMonth()" class="px-3 py-1 bg-slate-100 hover:bg-slate-200 rounded-lg text-xs font-bold">다음달 ▶</button>
+                    </div>
+
+                    <!-- 요일 헤더 -->
+                    <div class="grid grid-cols-7 gap-1 text-center text-xs font-bold text-slate-400 mb-2">
+                        <span class="text-rose-500">일</span><span>월</span><span>화</span><span>수</span><span>목</span><span>금</span><span class="text-blue-500">토</span>
+                    </div>
+
+                    <!-- 날짜 그리드 -->
+                    <div id="calendar-days" class="grid grid-cols-7 gap-1 text-center text-xs"></div>
+                </div>
+
+                <!-- 우측: 선택 날짜 특이사항 작성 및 전체 메모 목록 -->
+                <div class="md:col-span-2 flex flex-col gap-5">
+                    
+                    <!-- 특정 날짜 메모 입력 폼 -->
+                    <div class="bg-white p-5 rounded-2xl shadow-sm border border-slate-200 flex flex-col gap-3">
+                        <h3 class="font-bold text-sm text-slate-800 border-b pb-2 flex justify-between items-center">
+                            <span>📝 <span id="selected-date-label" class="text-emerald-600">날짜를 선택하세요</span> 현장 특이사항</span>
+                        </h3>
+                        <textarea id="calendar-note-input" rows="3" placeholder="해당 날짜의 주요 특이사항, 배송지 이슈, 물량 변경건 등을 자유롭게 기록하세요..." class="w-full p-3 border rounded-xl text-xs focus:outline-none focus:ring-2 focus:ring-emerald-500"></textarea>
+                        <div class="flex gap-2 justify-end">
+                            <button type="button" onclick="saveCalendarNote()" class="bg-emerald-600 hover:bg-emerald-700 text-white font-bold px-4 py-2 rounded-xl text-xs">
+                                특이사항 저장
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- 기록된 전체 특이사항 목록 -->
+                    <div class="bg-white p-5 rounded-2xl shadow-sm border border-slate-200 flex flex-col gap-3">
+                        <h3 class="font-bold text-sm text-slate-800 border-b pb-2">📋 등록된 전체 특이사항 기록부</h3>
+                        <div id="calendar-notes-list" class="flex flex-col gap-2 max-h-[350px] overflow-y-auto pr-1"></div>
+                    </div>
+
+                </div>
+
+            </div>
+        </div>
+
+    </div>
+
+    <script>
+        // --- 전역 데이터 구조 ---
+        let store = { '월': [], '화': [], '수': [], '목': [], '금': [] };
+        let calendarNotes = {}; // {'YYYY-MM-DD': '메모내용'}
+        let currentDay = '월';
+        let activeMainTab = 'delivery';
+
+        // 캘린더 상태 변수
+        let today = new Date();
+        let calYear = today.getFullYear();
+        let calMonth = today.getMonth(); // 0~11
+        let selectedDateStr = formatDate(today.getFullYear(), today.getMonth() + 1, today.getDate());
+
+        // --- 초기화 ---
+        window.addEventListener('DOMContentLoaded', () => {
+            const localData = localStorage.getItem('fb_planner_data');
+            if (localData) {
+                try { store = JSON.parse(localData); } catch(e){}
+            }
+            const localCalData = localStorage.getItem('fb_calendar_notes');
+            if (localCalData) {
+                try { calendarNotes = JSON.parse(localCalData); } catch(e){}
+            }
+            
+            changeDay('월');
+            renderCalendar();
+            selectCalendarDate(selectedDateStr);
+        });
+
+        // --- 상위 메인 탭 전환 ---
+        function switchMainTab(tab) {
+            activeMainTab = tab;
+            const delSec = document.getElementById('section-delivery');
+            const calSec = document.getElementById('section-calendar');
+            const delBtn = document.getElementById('main-tab-delivery');
+            const calBtn = document.getElementById('main-tab-calendar');
+
+            if (tab === 'delivery') {
+                delSec.classList.remove('hidden');
+                calSec.classList.add('hidden');
+                delBtn.className = "flex-1 py-3 rounded-xl font-bold text-sm text-center transition bg-white text-emerald-700 shadow-sm";
+                calBtn.className = "flex-1 py-3 rounded-xl font-bold text-sm text-center transition text-slate-600 hover:text-slate-900";
+            } else {
+                delSec.classList.add('hidden');
+                calSec.classList.remove('hidden');
+                calBtn.className = "flex-1 py-3 rounded-xl font-bold text-sm text-center transition bg-white text-emerald-700 shadow-sm";
+                delBtn.className = "flex-1 py-3 rounded-xl font-bold text-sm text-center transition text-slate-600 hover:text-slate-900";
+            }
+        }
+
+        // --- 배송 데이터 관리 로직 ---
+        function saveStore() { localStorage.setItem('fb_planner_data', JSON.stringify(store)); }
+
+        function changeDay(day) {
+            currentDay = day;
+            document.querySelectorAll('.day-btn').forEach(btn => {
+                btn.className = "day-btn flex-1 py-3 rounded-xl font-bold text-sm bg-white text-slate-600 shadow-sm border border-slate-200";
+            });
+            const activeBtn = document.getElementById(`tab-${day}`);
+            if(activeBtn) activeBtn.className = "day-btn flex-1 py-3 rounded-xl font-bold text-sm bg-emerald-600 text-white shadow-md border border-emerald-600";
+
+            document.getElementById('label-day').textContent = `${day}요일`;
+            document.getElementById('btn-day-name').textContent = `${day}요일`;
+            document.getElementById('title-day').textContent = `${day}요일`;
+            renderDelivery();
+        }
+
+        function handleAdd() {
+            const name = document.getElementById('input-name').value.trim();
+            const address = document.getElementById('input-address').value.trim();
+            const phone = document.getElementById('input-phone').value.trim();
+            const item = document.getElementById('input-item').value.trim();
+
+            if (!name || !address) {
+                alert('배송처명과 주소는 필수 입력 항목입니다!');
+                return;
+            }
+
+            const itemData = {
+                id: Date.now(),
+                name: name,
+                address: address,
+                phone: phone || '연락처 없음',
+                item: item || '기본 물량',
+                memo: '',
+                done: false
+            };
+
+            if (!store[currentDay]) store[currentDay] = [];
+            store[currentDay].push(itemData);
+            saveStore();
+
+            document.getElementById('input-name').value = '';
+            document.getElementById('input-address').value = '';
+            document.getElementById('input-phone').value = '';
+            document.getElementById('input-item').value = '';
+            renderDelivery();
+        }
+
+        function toggleDone(id) {
+            const target = store[currentDay].find(x => x.id === id);
+            if (target) { target.done = !target.done; saveStore(); renderDelivery(); }
+        }
+
+        function updateMemo(id, text) {
+            const target = store[currentDay].find(x => x.id === id);
+            if (target) { target.memo = text; saveStore(); }
+        }
+
+        function deleteItem(id) {
+            store[currentDay] = store[currentDay].filter(x => x.id !== id);
+            saveStore(); renderDelivery();
+        }
+
+        function handleReset() {
+            if (!store[currentDay] || store[currentDay].length === 0) return;
+            if (confirm(`${currentDay}요일 배송 상태를 모두 '대기'로 되돌리시겠습니까?`)) {
+                store[currentDay].forEach(x => x.done = false);
+                saveStore(); renderDelivery();
+            }
+        }
+
+        function handleDeleteAll() {
+            if (!store[currentDay] || store[currentDay].length === 0) return;
+            if (confirm(`정말로 ${currentDay}요일의 모든 배송지를 삭제하시겠습니까?`)) {
+                store[currentDay] = [];
+                saveStore(); renderDelivery();
+            }
+        }
+
+        function goNavi(app, address) {
+            const encoded = encodeURIComponent(address);
+            if (app === 'kakao') window.open(`https://map.kakao.com/link/search/${encoded}`, '_blank');
+            if (app === 'tmap') window.open(`https://surl.tmap.co.kr/search?keyword=${encoded}`, '_blank');
+            if (app === 'naver') window.open(`https://map.naver.com/v5/search/${encoded}`, '_blank');
+        }
+
+        function renderDelivery() {
+            const container = document.getElementById('list-container');
+            const list = store[currentDay] || [];
+
+            document.getElementById('count-num').textContent = list.length;
+            const doneCount = list.filter(x => x.done).length;
+            const totalCount = list.length;
+            const pct = totalCount > 0 ? Math.round((doneCount / totalCount) * 100) : 0;
+            document.getElementById('header-badge').textContent = `진행률: ${doneCount} / ${totalCount}건 (${pct}%)`;
+
+            if (list.length === 0) {
+                container.innerHTML = `
+                    <div class="text-center py-16 text-slate-400 text-sm bg-slate-50 rounded-xl border border-dashed border-slate-200">
+                        📍 ${currentDay}요일에 등록된 배송지가 없습니다.<br>좌측 양식에서 배송지를 입력해 보세요!
+                    </div>`;
+                return;
+            }
+
+            let html = '';
+            list.forEach((item, index) => {
+                html += `
+                    <div class="p-4 rounded-xl border ${item.done ? 'bg-slate-100 border-slate-200 opacity-60' : 'bg-white border-slate-200 shadow-sm'} flex flex-col gap-2.5">
+                        <div class="flex justify-between items-center">
+                            <div class="flex items-center gap-2">
+                                <span class="bg-emerald-600 text-white w-5 h-5 rounded-full flex items-center justify-center text-xs font-bold">${index + 1}</span>
+                                <h3 class="font-bold text-slate-800 text-sm ${item.done ? 'line-through text-slate-500' : ''}">${item.name}</h3>
+                            </div>
+                            <div class="flex items-center gap-1.5">
+                                <button type="button" onclick="toggleDone(${item.id})" class="text-xs px-2.5 py-1 rounded-lg font-bold ${item.done ? 'bg-emerald-600 text-white' : 'bg-amber-100 text-amber-800'}">
+                                    ${item.done ? '✓ 완료됨' : '⏳ 배송대기'}
+                                </button>
+                                <button type="button" onclick="deleteItem(${item.id})" class="text-slate-400 hover:text-rose-500 text-xs font-bold px-1 py-0.5">✕</button>
+                            </div>
+                        </div>
+
+                        <div class="text-xs text-slate-600 bg-slate-50 p-2 rounded-lg border border-slate-100 flex flex-col gap-0.5">
+                            <p class="font-semibold text-slate-700">📍 주소: ${item.address}</p>
+                            <p>📞 연락처: ${item.phone}</p>
+                            <p class="text-emerald-700 font-medium">📦 물량: ${item.item}</p>
+                        </div>
+
+                        <div>
+                            <input type="text" value="${item.memo || ''}" onchange="updateMemo(${item.id}, this.value)" placeholder="📝 현장 특이사항 메모 (자동저장)" class="w-full px-2.5 py-1 border rounded-lg text-xs bg-white text-slate-700 focus:outline-none focus:ring-1 focus:ring-emerald-500">
+                        </div>
+
+                        <div class="flex gap-1.5 pt-1">
+                            <button type="button" onclick="goNavi('kakao', '${item.address}')" class="flex-1 bg-yellow-400 hover:bg-yellow-500 text-slate-900 font-bold py-1.5 rounded-lg text-xs">카카오내비</button>
+                            <button type="button" onclick="goNavi('tmap', '${item.address}')" class="flex-1 bg-red-500 hover:bg-red-600 text-white font-bold py-1.5 rounded-lg text-xs">TMAP</button>
+                            <button type="button" onclick="goNavi('naver', '${item.address}')" class="flex-1 bg-green-500 hover:bg-green-600 text-white font-bold py-1.5 rounded-lg text-xs">네이버지도</button>
+                        </div>
+                    </div>
+                `;
+            });
+            container.innerHTML = html;
+        }
+
+        // --- 캘린더 로직 ---
+        function saveCalendarStore() {
+            localStorage.setItem('fb_calendar_notes', JSON.stringify(calendarNotes));
+        }
+
+        function formatDate(y, m, d) {
+            const mm = m < 10 ? '0' + m : m;
+            const dd = d < 10 ? '0' + d : d;
+            return `${y}-${mm}-${dd}`;
+        }
+
+        function prevMonth() {
+            calMonth--;
+            if (calMonth < 0) { calMonth = 11; calYear--; }
+            renderCalendar();
+        }
+
+        function nextMonth() {
+            calMonth++;
+            if (calMonth > 11) { calMonth = 0; calYear++; }
+            renderCalendar();
+        }
+
+        function renderCalendar() {
+            document.getElementById('calendar-month-year').textContent = `${calYear}년 ${calMonth + 1}월`;
+            const daysContainer = document.getElementById('calendar-days');
+            daysContainer.innerHTML = '';
+
+            const firstDay = new Date(calYear, calMonth, 1).getDay();
+            const lastDate = new Date(calYear, calMonth + 1, 0).getDate();
+
+            // 공백 셀
+            for (let i = 0; i < firstDay; i++) {
+                const emptyCell = document.createElement('div');
+                emptyCell.className = "h-9";
+                daysContainer.appendChild(emptyCell);
+            }
+
+            // 날짜 셀
+            for (let date = 1; date <= lastDate; date++) {
+                const dateStr = formatDate(calYear, calMonth + 1, date);
+                const isSelected = dateStr === selectedDateStr;
+                const hasNote = calendarNotes[dateStr] && calendarNotes[dateStr].trim() !== '';
+
+                const cell = document.createElement('button');
+                cell.type = 'button';
+                cell.onclick = () => selectCalendarDate(dateStr);
+
+                let baseClass = "h-9 rounded-lg font-medium flex flex-col items-center justify-center relative transition ";
+                if (isSelected) {
+                    baseClass += "bg-emerald-600 text-white font-bold shadow-sm ";
+                } else {
+                    baseClass += "hover:bg-slate-100 text-slate-700 ";
+                }
+
+                cell.className = baseClass;
+                cell.innerHTML = `<span>${date}</span>`;
+
+                if (hasNote) {
+                    const dot = document.createElement('span');
+                    dot.className = isSelected ? "w-1.5 h-1.5 bg-white rounded-full mt-0.5" : "w-1.5 h-1.5 bg-emerald-500 rounded-full mt-0.5";
+                    cell.appendChild(dot);
+                }
+
+                daysContainer.appendChild(cell);
+            }
+
+            renderCalendarNotesList();
+        }
+
+        function selectCalendarDate(dateStr) {
+            selectedDateStr = dateStr;
+            document.getElementById('selected-date-label').textContent = dateStr;
+            document.getElementById('calendar-note-input').value = calendarNotes[dateStr] || '';
+            renderCalendar();
+        }
+
+        function saveCalendarNote() {
+            const text = document.getElementById('calendar-note-input').value.trim();
+            if (text) {
+                calendarNotes[selectedDateStr] = text;
+            } else {
+                delete calendarNotes[selectedDateStr];
+            }
+            saveCalendarStore();
+            renderCalendar();
+            alert(`${selectedDateStr} 특이사항이 저장되었습니다.`);
+        }
+
+        function deleteCalendarNote(dateStr) {
+            if (confirm(`${dateStr} 특이사항을 삭제하시겠습니까?`)) {
+                delete calendarNotes[dateStr];
+                saveCalendarStore();
+                if (selectedDateStr === dateStr) {
+                    document.getElementById('calendar-note-input').value = '';
+                }
+                renderCalendar();
+            }
+        }
+
+        function renderCalendarNotesList() {
+            const listContainer = document.getElementById('calendar-notes-list');
+            const dates = Object.keys(calendarNotes).sort().reverse(); // 최근 날짜 순 정렬
+
+            if (dates.length === 0) {
+                listContainer.innerHTML = `
+                    <div class="text-center py-8 text-slate-400 text-xs bg-slate-50 rounded-xl border border-dashed border-slate-200">
+                        등록된 특이사항 기록이 없습니다.<br>달력에서 날짜를 선택하여 메모를 적어보세요!
+                    </div>`;
+                return;
+            }
+
+            let html = '';
+            dates.forEach(dStr => {
+                html += `
+                    <div class="p-3 bg-slate-50 border border-slate-200 rounded-xl flex justify-between items-start gap-2">
+                        <div class="flex flex-col gap-1">
+                            <span class="font-bold text-xs text-emerald-700">📅 ${dStr}</span>
+                            <p class="text-xs text-slate-700 whitespace-pre-wrap">${calendarNotes[dStr]}</p>
+                        </div>
+                        <div class="flex gap-1">
+                            <button type="button" onclick="selectCalendarDate('${dStr}')" class="text-xs text-slate-500 hover:text-emerald-600 font-bold px-1.5 py-0.5">수정</button>
+                            <button type="button" onclick="deleteCalendarNote('${dStr}')" class="text-xs text-rose-400 hover:text-rose-600 font-bold px-1.5 py-0.5">✕</button>
+                        </div>
+                    </div>
+                `;
+            });
+            listContainer.innerHTML = html;
+        }
+    </script>
+</body>
+</html>
