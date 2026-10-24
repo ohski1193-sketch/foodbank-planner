@@ -50,50 +50,11 @@
                 <button type="button" onclick="changeDay('금')" id="tab-금" class="day-btn flex-1 py-3 rounded-xl font-bold text-sm bg-white text-slate-600 shadow-sm border border-slate-200">금요일</button>
             </div>
 
-            <!-- 배송 레이아웃 -->
-            <div class="grid grid-cols-1 md:grid-cols-3 gap-5">
-                <!-- 입력 폼 -->
-                <div class="bg-white p-5 rounded-2xl shadow-sm border border-slate-200 flex flex-col gap-3 h-fit">
-                    <h2 class="text-base font-bold text-slate-800 border-b pb-2">
-                        <span id="label-day" class="text-emerald-600">월요일</span> 배송지 추가
-                    </h2>
-
-                    <div>
-                        <label class="block text-xs font-bold text-slate-500 mb-1">배송처명 *</label>
-                        <input type="text" id="input-name" placeholder="예: 효사랑 나눔의집" class="w-full px-3 py-2 border rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500">
-                    </div>
-
-                    <div>
-                        <label class="block text-xs font-bold text-slate-500 mb-1">도로명 주소 *</label>
-                        <input type="text" id="input-address" placeholder="예: 광주 남구 봉선로 45" class="w-full px-3 py-2 border rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500">
-                    </div>
-
-                    <div>
-                        <label class="block text-xs font-bold text-slate-500 mb-1">연락처</label>
-                        <input type="text" id="input-phone" placeholder="예: 062-123-4567" class="w-full px-3 py-2 border rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500">
-                    </div>
-
-                    <div>
-                        <label class="block text-xs font-bold text-slate-500 mb-1">배송 물량 / 기본 품목</label>
-                        <input type="text" id="input-item" placeholder="예: 식료품 상자 3개" class="w-full px-3 py-2 border rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500">
-                    </div>
-
-                    <button type="button" onclick="handleAdd()" class="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-2.5 rounded-xl text-sm transition shadow-sm mt-1">
-                        + <span id="btn-day-name">월요일</span> 목록에 추가
-                    </button>
-
-                    <div class="border-t pt-3 mt-2 flex flex-col gap-2">
-                        <button type="button" onclick="handleReset()" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 rounded-xl text-xs transition">
-                            🔄 오늘 일정 완료 (배송대기로 초기화)
-                        </button>
-                        <button type="button" onclick="handleDeleteAll()" class="w-full bg-slate-100 hover:bg-slate-200 text-slate-500 font-medium py-1.5 rounded-xl text-xs transition">
-                            이 요일 배송지 전체 삭제
-                        </button>
-                    </div>
-                </div>
-
-                <!-- 배송 목록 -->
-                <div class="md:col-span-2 bg-white p-5 rounded-2xl shadow-sm border border-slate-200">
+            <!-- 배송 레이아웃 (배송 목록 위, 등록 폼 아래로 재배치) -->
+            <div class="flex flex-col gap-5">
+                
+                <!-- 1) 배송 목록 (위쪽으로 배치) -->
+                <div class="bg-white p-5 rounded-2xl shadow-sm border border-slate-200">
                     <div class="flex justify-between items-center border-b pb-2 mb-4">
                         <h2 class="text-base font-bold text-slate-800">
                             <span id="title-day" class="text-emerald-600">월요일</span> 배송 목록 (<span id="count-num">0</span>건)
@@ -103,6 +64,49 @@
 
                     <div id="list-container" class="flex flex-col gap-3 max-h-[600px] overflow-y-auto pr-1"></div>
                 </div>
+
+                <!-- 2) 배송지 추가 입력 폼 (아래쪽으로 배치) -->
+                <div class="bg-white p-5 rounded-2xl shadow-sm border border-slate-200 flex flex-col gap-3">
+                    <h2 class="text-base font-bold text-slate-800 border-b pb-2">
+                        ➕ <span id="label-day" class="text-emerald-600">월요일</span> 배송지 신규 등록
+                    </h2>
+
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+                        <div>
+                            <label class="block text-xs font-bold text-slate-500 mb-1">배송처명 *</label>
+                            <input type="text" id="input-name" placeholder="예: 효사랑 나눔의집" class="w-full px-3 py-2 border rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500">
+                        </div>
+
+                        <div>
+                            <label class="block text-xs font-bold text-slate-500 mb-1">도로명 주소 *</label>
+                            <input type="text" id="input-address" placeholder="예: 광주 남구 봉선로 45" class="w-full px-3 py-2 border rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500">
+                        </div>
+
+                        <div>
+                            <label class="block text-xs font-bold text-slate-500 mb-1">연락처</label>
+                            <input type="text" id="input-phone" placeholder="예: 062-123-4567" class="w-full px-3 py-2 border rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500">
+                        </div>
+
+                        <div>
+                            <label class="block text-xs font-bold text-slate-500 mb-1">배송 물량 / 기본 품목</label>
+                            <input type="text" id="input-item" placeholder="예: 식료품 상자 3개" class="w-full px-3 py-2 border rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500">
+                        </div>
+                    </div>
+
+                    <button type="button" onclick="handleAdd()" class="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-2.5 rounded-xl text-sm transition shadow-sm mt-1">
+                        + <span id="btn-day-name">월요일</span> 목록에 추가
+                    </button>
+
+                    <div class="border-t pt-3 mt-1 flex gap-2">
+                        <button type="button" onclick="handleReset()" class="flex-1 bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 rounded-xl text-xs transition">
+                            🔄 오늘 일정 완료 (배송대기로 초기화)
+                        </button>
+                        <button type="button" onclick="handleDeleteAll()" class="flex-1 bg-slate-100 hover:bg-slate-200 text-slate-500 font-medium py-2 rounded-xl text-xs transition">
+                            이 요일 배송지 전체 삭제
+                        </button>
+                    </div>
+                </div>
+
             </div>
         </div>
 
@@ -306,7 +310,7 @@
             if (list.length === 0) {
                 container.innerHTML = `
                     <div class="text-center py-16 text-slate-400 text-sm bg-slate-50 rounded-xl border border-dashed border-slate-200">
-                        📍 ${currentDay}요일에 등록된 배송지가 없습니다.<br>좌측 양식에서 배송지를 입력해 보세요!
+                        📍 ${currentDay}요일에 등록된 배송지가 없습니다.<br>하단 양식에서 배송지를 입력해 보세요!
                     </div>`;
                 return;
             }
