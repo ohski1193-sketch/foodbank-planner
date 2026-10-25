@@ -246,7 +246,7 @@
             appId: "1:476867511482:web:8402d210fba4d7fc516e83"
         };
 
-        const REST_API_KEY = "356c03e59b6736b3e04bd07dca7aa77";
+        // 길찾기 REST API 키는 브라우저에 두지 않습니다. /api/directions 서버를 통해 요청합니다.
         
         firebase.initializeApp(firebaseConfig);
         const db = firebase.database();
@@ -424,11 +424,15 @@
                 document.getElementById('nav-guidance').textContent = '오늘 배정된 배송을 모두 완료했습니다.';
                 navTargetCoords = null;
                 if (navTargetMarker) navTargetMarker.setMap(null);
-                if (navGuideLine) navGuideLine.setMap(null);
+                clearNavigationLine();
+                lastRouteTargetKey = '';
+                lastRouteOrigin = null;
                 return;
             }
             nameEl.textContent = '다음 목적지: ' + target.name;
             document.getElementById('nav-guidance').textContent = target.address + ' · 경로 찾는 중…';
+            lastRouteTargetKey = '';
+            lastRouteOrigin = null;
             if (!geocoder) return;
             geocoder.addressSearch(target.address, (result, status) => {
                 if (status !== kakao.maps.services.Status.OK || !result || !result.length) {
@@ -440,79 +444,99 @@
                 navTargetMarker = new kakao.maps.Marker({ map, position: navTargetCoords, title: target.name });
                 map.setCenter(navTargetCoords);
                 map.setLevel(4);
-                updateWebNavigationDisplay();
+                updateWebNavigationDisplay(true);
             });
         }
 
+        let routeRequestInProgress = false;
+        let lastRouteRequestAt = 0;
+        let lastRouteOrigin = null;
+        let lastRouteTargetKey = '';
+
         async function fetchKakaoMobilityDirections(origin, destination) {
-            if (!REST_API_KEY) return null;
             const originStr = `${origin.getLng()},${origin.getLat()}`;
             const destStr = `${destination.getLng()},${destination.getLat()}`;
-            const url = `https://apis-navi.kakaomobility.com/v1/directions?origin=${originStr}&destination=${destStr}&priority=RECOMMEND`;
-
+            const url = `/api/directions?origin=${encodeURIComponent(originStr)}&destination=${encodeURIComponent(destStr)}`;
             try {
-                const response = await fetch(url, {
-                    method: 'GET',
-                    headers: {
-                        'Authorization': `KakaoAK ${REST_API_KEY}`
-                    }
-                });
-                if (!response.ok) return null;
+                const response = await fetch(url);
+                if (!response.ok) {
+                    console.warn('길찾기 서버 응답 오류:', response.status, await response.text().catch(() => ''));
+                    return null;
+                }
                 const data = await response.json();
                 if (data.routes && data.routes.length > 0 && data.routes[0].result_code === 0) {
+                    const route = data.routes[0];
                     const linePath = [];
-                    data.routes[0].sections.forEach(section => {
-                        section.roads.forEach(road => {
-                            for (let i = 0; i < road.vertexes.length; i += 2) {
-                                linePath.push(new kakao.maps.LatLng(road.vertexes[i + 1], road.vertexes[i]));
+                    (route.sections || []).forEach(section => {
+                        (section.roads || []).forEach(road => {
+                            const vertices = road.vertexes || [];
+                            for (let i = 0; i + 1 < vertices.length; i += 2) {
+                                linePath.push(new kakao.maps.LatLng(Number(vertices[i + 1]), Number(vertices[i])));
                             }
                         });
                     });
-                    return {
-                        path: linePath,
-                        distance: data.routes[0].summary.distance,
-                        duration: data.routes[0].summary.duration
-                    };
+                    return { path: linePath, distance: route.summary?.distance ?? 0, duration: route.summary?.duration ?? 0 };
                 }
+                console.warn('카카오 길찾기 결과:', data);
             } catch (err) {
-                console.warn('카카오모빌리티 API 호출 오류:', err);
+                console.warn('길찾기 서버 호출 오류:', err);
             }
             return null;
         }
 
-        async function updateWebNavigationDisplay() {
-            if (!userPosition || !navTargetCoords || !map) return;
-            if (navGuideLine) navGuideLine.setMap(null);
-
-            const routeData = await fetchKakaoMobilityDirections(userPosition, navTargetCoords);
-
-            if (routeData && routeData.path.length > 0) {
-                navGuideLine = new kakao.maps.Polyline({
-                    map,
-                    path: routeData.path,
-                    strokeWeight: 6,
-                    strokeColor: '#10b981',
-                    strokeOpacity: 0.9,
-                    strokeStyle: 'solid'
-                });
-                const distKm = (routeData.distance / 1000).toFixed(1);
-                const durationMin = Math.round(routeData.duration / 60);
-                document.getElementById('nav-guidance').textContent = `🚘 도로 주행거리: 약 ${distKm}km · 예상 소요시간: 약 ${durationMin}분`;
-            } else {
-                navGuideLine = new kakao.maps.Polyline({
-                    map,
-                    path: [userPosition, navTargetCoords],
-                    strokeWeight: 5,
-                    strokeColor: '#10b981',
-                    strokeOpacity: 0.9,
-                    strokeStyle: 'shortdash'
-                });
-                const distance = Math.round(6371000 * 2 * Math.atan2(
-                    Math.sqrt(Math.sin((navTargetCoords.getLat() - userPosition.getLat()) * Math.PI / 360)**2 + Math.cos(userPosition.getLat() * Math.PI / 180) * Math.cos(navTargetCoords.getLat() * Math.PI / 180) * Math.sin((navTargetCoords.getLng() - userPosition.getLng()) * Math.PI / 360)**2),
-                    Math.sqrt(1 - (Math.sin((navTargetCoords.getLat() - userPosition.getLat()) * Math.PI / 360)**2 + Math.cos(userPosition.getLat() * Math.PI / 180) * Math.cos(navTargetCoords.getLat() * Math.PI / 180) * Math.sin((navTargetCoords.getLng() - userPosition.getLng()) * Math.PI / 360)**2))
-                ));
-                document.getElementById('nav-guidance').textContent = `직선거리 약 ${(distance/1000).toFixed(1)}km (실제 도로 안내는 '🚀 카카오내비' 버튼 클릭)`;
+        function clearNavigationLine() {
+            if (navGuideLine) {
+                navGuideLine.setMap(null);
+                navGuideLine = null;
             }
+        }
+
+        async function updateWebNavigationDisplay(force = false) {
+            if (!userPosition || !navTargetCoords || !map || routeRequestInProgress) return;
+            const now = Date.now();
+            const targetKey = `${navTargetCoords.getLat().toFixed(5)},${navTargetCoords.getLng().toFixed(5)}`;
+            const movedMeters = lastRouteOrigin
+                ? distanceBetweenPoints(lastRouteOrigin, userPosition)
+                : Infinity;
+            // GPS가 자주 갱신되어도 매번 API를 호출하지 않도록 100m 이동 또는 60초 경과 시 갱신
+            if (!force && targetKey === lastRouteTargetKey && movedMeters < 100 && now - lastRouteRequestAt < 60000) return;
+
+            routeRequestInProgress = true;
+            lastRouteRequestAt = now;
+            lastRouteOrigin = new kakao.maps.LatLng(userPosition.getLat(), userPosition.getLng());
+            lastRouteTargetKey = targetKey;
+            document.getElementById('nav-guidance').textContent = '실제 도로 경로를 계산하고 있습니다…';
+
+            try {
+                const routeData = await fetchKakaoMobilityDirections(userPosition, navTargetCoords);
+                clearNavigationLine();
+                if (routeData && routeData.path.length > 0) {
+                    navGuideLine = new kakao.maps.Polyline({
+                        map, path: routeData.path, strokeWeight: 6,
+                        strokeColor: '#10b981', strokeOpacity: 0.9, strokeStyle: 'solid'
+                    });
+                    const distKm = (routeData.distance / 1000).toFixed(1);
+                    const durationMin = Math.round(routeData.duration / 60);
+                    document.getElementById('nav-guidance').textContent =
+                        `🚘 실제 도로 경로 · 약 ${distKm}km · 예상 ${durationMin}분 (음성 안내는 카카오내비 앱 이용)`;
+                    const bounds = new kakao.maps.LatLngBounds();
+                    routeData.path.forEach(point => bounds.extend(point));
+                    map.setBounds(bounds);
+                } else {
+                    document.getElementById('nav-guidance').textContent =
+                        '도로 경로를 가져오지 못했습니다. 서버 실행 상태와 REST API 키를 확인해 주세요. 카카오내비 버튼으로 외부 안내를 이용할 수 있습니다.';
+                }
+            } finally {
+                routeRequestInProgress = false;
+            }
+        }
+
+        function distanceBetweenPoints(a, b) {
+            const toRad = value => value * Math.PI / 180;
+            const lat1 = toRad(a.getLat()), lat2 = toRad(b.getLat());
+            const dLat = lat2 - lat1, dLng = toRad(b.getLng() - a.getLng());
+            const h = Math.sin(dLat / 2) ** 2 + Math.cos(lat1) * Math.cos(lat2) * Math.sin(dLng / 2) ** 2;
+            return 6371000 * 2 * Math.atan2(Math.sqrt(h), Math.sqrt(1 - h));
         }
 
         // 해당 요일 배송지들을 순서대로 마커를 찍고 동선 선(Polyline)으로 연결
