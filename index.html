@@ -101,7 +101,7 @@
                 </div>
             </div>
 
-            <!-- 2) 요일별 상세 배송 목록 (상단 배치) -->
+            <!-- 2) 요일별 상세 배송 목록 -->
             <div class="bg-slate-800 p-5 rounded-2xl shadow-lg border border-slate-700">
                 <div class="flex justify-between items-center border-b border-slate-700 pb-2 mb-4">
                     <h2 class="text-base font-bold text-white">
@@ -121,11 +121,11 @@
                 </div>
             </div>
 
-            <!-- 3) 실시간 동선 지도 영역 (하단 배치) -->
+            <!-- 3) 실시간 동선 지도 영역 (경로선 연결 적용) -->
             <div class="dark-map-container bg-slate-800 p-4 rounded-2xl shadow-lg border border-slate-700 flex flex-col gap-3">
                 <div class="flex justify-between items-center border-b border-slate-700 pb-2">
                     <h2 class="text-base font-bold text-white flex items-center gap-2">
-                        🗺️ <span id="map-day-title" class="text-emerald-400">월요일</span> 실시간 지도 동선 현황
+                        🗺️ <span id="map-day-title" class="text-emerald-400">월요일</span>실시간 배송 동선 지도
                     </h2>
                     <button type="button" onclick="getCurrentLocation()" class="text-xs bg-slate-700 hover:bg-slate-600 text-emerald-400 font-bold px-3 py-1.5 rounded-lg border border-slate-600 transition">
                         📍 내 위치 추적
@@ -246,8 +246,8 @@
             appId: "1:476867511482:web:8402d210fba4d7fc516e83"
         };
 
-        const REST_API_KEY = "bb4ed44dd682ef912b4c09ba8b10845f";
-
+        const REST_API_KEY = "356c03e59b6736b3e04bd07dca7aa77";
+        
         firebase.initializeApp(firebaseConfig);
         const db = firebase.database();
 
@@ -258,6 +258,7 @@
 
         let map = null;
         let mapMarkers = [];
+        let dayRoutePolyline = null;
         let userLocationMarker = null;
         let geocoder = null;
         let userPosition = null;
@@ -351,7 +352,7 @@
             else if (geocoder) setWebNavigationTarget(null);
         }
 
-        // --- 지도 로직 ---
+        // --- 지도 로직 (순차적 핀 및 동선 경로선 연결) ---
         function initMap() {
             if (typeof kakao === 'undefined' || !kakao.maps) return;
             const mapContainer = document.getElementById('map');
@@ -514,21 +515,48 @@
             }
         }
 
+        // 해당 요일 배송지들을 순서대로 마커를 찍고 동선 선(Polyline)으로 연결
         function renderMap() {
             if (!map || typeof kakao === 'undefined' || !kakao.maps) return;
 
             mapMarkers.forEach(m => m.setMap(null));
             mapMarkers = [];
+            if (dayRoutePolyline) {
+                dayRoutePolyline.setMap(null);
+                dayRoutePolyline = null;
+            }
 
             const list = store[currentDay] || [];
             if (list.length === 0) return;
 
             const bounds = new kakao.maps.LatLngBounds();
+            const coordsList = [];
 
-            list.forEach((item, idx) => {
+            let index = 0;
+            function processNextAddress() {
+                if (index >= list.length) {
+                    if (coordsList.length > 1) {
+                        dayRoutePolyline = new kakao.maps.Polyline({
+                            map: map,
+                            path: coordsList,
+                            strokeWeight: 5,
+                            strokeColor: '#10b981',
+                            strokeOpacity: 0.85,
+                            strokeStyle: 'solid'
+                        });
+                    }
+                    return;
+                }
+
+                const item = list[index];
+                const idx = index;
+                index++;
+
                 geocoder.addressSearch(item.address, function(result, status) {
-                    if (status === kakao.maps.services.Status.OK) {
+                    if (status === kakao.maps.services.Status.OK && result.length > 0) {
                         const coords = new kakao.maps.LatLng(result[0].y, result[0].x);
+                        coordsList[idx] = coords;
+
                         const marker = new kakao.maps.Marker({ map: map, position: coords });
                         mapMarkers.push(marker);
                         bounds.extend(coords);
@@ -541,8 +569,10 @@
                         });
                         map.setBounds(bounds);
                     }
+                    processNextAddress();
                 });
-            });
+            }
+            processNextAddress();
         }
 
         function saveStoreToFirebase() { db.ref('delivery_store').set(store); }
