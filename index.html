@@ -67,51 +67,56 @@
                 <button type="button" onclick="changeDay('금')" id="tab-금" class="day-btn flex-1 py-3 rounded-xl font-bold text-sm bg-slate-800 text-slate-400 border border-slate-700 shadow-sm">금</button>
             </div>
 
-            <!-- [박스 1] 요일별 밑반찬통 수량 관리 (숫자 입력 & 증감 버튼) -->
-            <div class="bg-slate-800 border-2 border-blue-500 p-4 rounded-2xl shadow-lg flex flex-col gap-3">
-                <div class="flex justify-between items-center border-b border-slate-700 pb-2">
-                    <span class="text-xs text-blue-400 font-extrabold tracking-wide uppercase flex items-center gap-1">
-                        🍱 <span id="side-dish-day-title-1">월요일</span> 밑반찬통 수량 관리 (숫자)
-                    </span>
-                    <span class="text-[11px] text-slate-400">실시간 공유</span>
-                </div>
-                
-                <!-- 직접 입력 폼 -->
-                <div class="flex gap-2">
-                    <input type="text" id="input-side-dish-name" placeholder="반찬통 종류 (예: 스텐 반찬통)" class="flex-1 px-3 py-2 bg-slate-900 border border-slate-700 text-slate-200 rounded-xl text-xs focus:outline-none focus:ring-1 focus:ring-blue-500">
-                    <input type="number" id="input-side-dish-count" placeholder="수량" value="1" min="0" class="w-20 px-3 py-2 bg-slate-900 border border-slate-700 text-slate-200 rounded-xl text-xs text-center focus:outline-none focus:ring-1 focus:ring-blue-500">
-                    <button type="button" onclick="handleAddNewSideDish()" class="bg-blue-600 hover:bg-blue-500 text-white font-bold px-4 py-2 rounded-xl text-xs whitespace-nowrap">
-                        + 추가
-                    </button>
-                </div>
-
-                <!-- 목록 컨테이너 -->
-                <div id="side-dish-container" class="flex flex-col gap-2 mt-1">
-                    <div class="text-center py-3 text-slate-400 text-xs">등록된 반찬통 항목이 없습니다.</div>
-                </div>
+            <!-- 요일 표시 타이틀 배너 -->
+            <div class="bg-slate-800 border border-slate-700 px-4 py-2 rounded-xl flex justify-between items-center text-xs">
+                <span class="font-bold text-emerald-400">📅 선택 요일: <span id="current-day-banner" class="text-white text-sm">월요일</span></span>
+                <span class="text-slate-400">아래 입력 내역은 전직원 간 실시간 공유됩니다</span>
             </div>
 
-            <!-- [박스 2] 요일별 기탁서 확인 및 인수 내용 (글 입력) -->
-            <div class="bg-slate-800 border-2 border-indigo-500 p-4 rounded-2xl shadow-lg flex flex-col gap-3">
-                <div class="flex justify-between items-center border-b border-slate-700 pb-2">
-                    <span class="text-xs text-indigo-400 font-extrabold tracking-wide uppercase flex items-center gap-1">
-                        📄 <span id="side-dish-day-title-2">월요일</span> 기탁서 확인 및 인수 내용 (글)
-                    </span>
-                    <span class="text-[11px] text-slate-400">실시간 공유</span>
+            <!-- 좌우 분할 구역 (왼쪽: 밑반찬통 수량 / 오른쪽: 기탁서 글자 기록) -->
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
+                
+                <!-- [왼쪽] 밑반찬통 수량 관리 (숫자 +,-) -->
+                <div class="bg-slate-800 border-2 border-blue-500 p-4 rounded-2xl shadow-lg flex flex-col gap-3">
+                    <div class="flex justify-between items-center border-b border-slate-700 pb-2">
+                        <span class="text-xs text-blue-400 font-extrabold tracking-wide uppercase flex items-center gap-1">
+                            🍱 밑반찬통 수량 관리
+                        </span>
+                    </div>
+                    
+                    <div class="flex gap-2">
+                        <input type="text" id="input-side-dish-name" placeholder="반찬통 종류 (예: 스텐 반찬통)" class="flex-1 px-3 py-2 bg-slate-900 border border-slate-700 text-slate-200 rounded-xl text-xs focus:outline-none focus:ring-1 focus:ring-blue-500">
+                        <input type="number" id="input-side-dish-count" placeholder="수량" value="1" min="0" class="w-16 px-2 py-2 bg-slate-900 border border-slate-700 text-slate-200 rounded-xl text-xs text-center focus:outline-none focus:ring-1 focus:ring-blue-500">
+                        <button type="button" onclick="handleAddNewSideDish()" class="bg-blue-600 hover:bg-blue-500 text-white font-bold px-3 py-2 rounded-xl text-xs whitespace-nowrap">
+                            + 추가
+                        </button>
+                    </div>
+
+                    <div id="side-dish-container" class="flex flex-col gap-2 mt-1 max-h-[250px] overflow-y-auto pr-1">
+                        <div class="text-center py-3 text-slate-400 text-xs">등록된 반찬통 항목이 없습니다.</div>
+                    </div>
                 </div>
 
-                <!-- 직접 입력 폼 -->
-                <div class="flex gap-2">
-                    <input type="text" id="input-certificate-text" placeholder="기탁서 내용 또는 확인 사항을 입력하세요..." class="flex-1 px-3 py-2 bg-slate-900 border border-slate-700 text-slate-200 rounded-xl text-xs focus:outline-none focus:ring-1 focus:ring-indigo-500">
-                    <button type="button" onclick="handleAddNewCertificate()" class="bg-indigo-600 hover:bg-indigo-500 text-white font-bold px-4 py-2 rounded-xl text-xs whitespace-nowrap">
-                        + 추가
-                    </button>
+                <!-- [오른쪽] 기탁서 확인 및 인수 내용 (글자 기록) -->
+                <div class="bg-slate-800 border-2 border-indigo-500 p-4 rounded-2xl shadow-lg flex flex-col gap-3">
+                    <div class="flex justify-between items-center border-b border-slate-700 pb-2">
+                        <span class="text-xs text-indigo-400 font-extrabold tracking-wide uppercase flex items-center gap-1">
+                            📄 기탁서 확인 및 인수 내용
+                        </span>
+                    </div>
+
+                    <div class="flex gap-2">
+                        <input type="text" id="input-certificate-text" placeholder="기탁서 내용 또는 확인 사항 입력..." class="flex-1 px-3 py-2 bg-slate-900 border border-slate-700 text-slate-200 rounded-xl text-xs focus:outline-none focus:ring-1 focus:ring-indigo-500">
+                        <button type="button" onclick="handleAddNewCertificate()" class="bg-indigo-600 hover:bg-indigo-500 text-white font-bold px-3 py-2 rounded-xl text-xs whitespace-nowrap">
+                            + 추가
+                        </button>
+                    </div>
+
+                    <div id="certificate-container" class="flex flex-col gap-2 mt-1 max-h-[250px] overflow-y-auto pr-1">
+                        <div class="text-center py-3 text-slate-400 text-xs">등록된 기탁서 항목이 없습니다.</div>
+                    </div>
                 </div>
 
-                <!-- 목록 컨테이너 -->
-                <div id="certificate-container" class="flex flex-col gap-2 mt-1">
-                    <div class="text-center py-3 text-slate-400 text-xs">등록된 기탁서 항목이 없습니다.</div>
-                </div>
             </div>
 
             <!-- 1) 배송 목적지 실시간 좌우 슬라이더 (카러셀) -->
@@ -370,8 +375,7 @@
             if(activeBtn) activeBtn.className = "day-btn flex-1 py-3 rounded-xl font-bold text-sm bg-emerald-600 text-white shadow-md border border-emerald-600";
 
             document.getElementById('title-day').textContent = `${day}요일`;
-            document.getElementById('side-dish-day-title-1').textContent = `${day}요일`;
-            document.getElementById('side-dish-day-title-2').textContent = `${day}요일`;
+            document.getElementById('current-day-banner').textContent = `${day}요일`;
             renderDelivery();
             renderSideDishBoard();
             renderCertificateBoard();
@@ -440,23 +444,23 @@
             const list = sideDishStore[currentDay] || [];
 
             if (list.length === 0) {
-                container.innerHTML = `<div class="text-center py-3 text-slate-400 text-xs">📍 ${currentDay}요일에 등록된 반찬통 항목이 없습니다. 위에서 직접 입력하여 추가해 보세요!</div>`;
+                container.innerHTML = `<div class="text-center py-3 text-slate-400 text-xs">등록된 반찬통 항목이 없습니다.</div>`;
                 return;
             }
 
             let html = '';
             list.forEach((item) => {
                 html += `
-                    <div class="p-3 bg-slate-900 border ${item.checked ? 'border-slate-700 opacity-50' : 'border-blue-600'} rounded-xl flex justify-between items-center gap-2">
-                        <div class="flex items-center gap-3 overflow-hidden">
-                            <input type="checkbox" ${item.checked ? 'checked' : ''} onchange="toggleSideDishCheck(${item.id})" class="w-5 h-5 accent-blue-600 rounded cursor-pointer">
-                            <span class="text-sm font-bold text-white truncate ${item.checked ? 'line-through text-slate-500' : ''}">${item.name}</span>
+                    <div class="p-2.5 bg-slate-900 border ${item.checked ? 'border-slate-700 opacity-50' : 'border-blue-600'} rounded-xl flex justify-between items-center gap-2">
+                        <div class="flex items-center gap-2 overflow-hidden">
+                            <input type="checkbox" ${item.checked ? 'checked' : ''} onchange="toggleSideDishCheck(${item.id})" class="w-4 h-4 accent-blue-600 rounded cursor-pointer">
+                            <span class="text-xs font-bold text-white truncate ${item.checked ? 'line-through text-slate-500' : ''}">${item.name}</span>
                         </div>
-                        <div class="flex items-center gap-2">
-                            <div class="flex items-center bg-slate-800 border border-slate-700 rounded-lg px-2 py-1">
-                                <button type="button" onclick="updateSideDishCount(${item.id}, -1)" class="text-slate-300 font-bold px-1.5 text-xs">-</button>
-                                <span class="mx-2 text-blue-400 font-extrabold text-xs">${item.count}개</span>
-                                <button type="button" onclick="updateSideDishCount(${item.id}, 1)" class="text-slate-300 font-bold px-1.5 text-xs">+</button>
+                        <div class="flex items-center gap-1.5 flex-shrink-0">
+                            <div class="flex items-center bg-slate-800 border border-slate-700 rounded-lg px-1.5 py-0.5">
+                                <button type="button" onclick="updateSideDishCount(${item.id}, -1)" class="text-slate-300 font-bold px-1 text-xs">-</button>
+                                <span class="mx-1 text-blue-400 font-extrabold text-xs">${item.count}개</span>
+                                <button type="button" onclick="updateSideDishCount(${item.id}, 1)" class="text-slate-300 font-bold px-1 text-xs">+</button>
                             </div>
                             <button type="button" onclick="deleteSideDishItem(${item.id})" class="text-xs text-rose-400 hover:text-rose-300 font-bold px-1">✕</button>
                         </div>
@@ -509,19 +513,19 @@
             const list = certificateStore[currentDay] || [];
 
             if (list.length === 0) {
-                container.innerHTML = `<div class="text-center py-3 text-slate-400 text-xs">📍 ${currentDay}요일에 등록된 기탁서 항목이 없습니다. 위에서 직접 입력하여 추가해 보세요!</div>`;
+                container.innerHTML = `<div class="text-center py-3 text-slate-400 text-xs">등록된 기탁서 항목이 없습니다.</div>`;
                 return;
             }
 
             let html = '';
             list.forEach((item) => {
                 html += `
-                    <div class="p-3 bg-slate-900 border ${item.checked ? 'border-slate-700 opacity-50' : 'border-indigo-600'} rounded-xl flex justify-between items-center gap-2">
-                        <div class="flex items-center gap-3 overflow-hidden">
-                            <input type="checkbox" ${item.checked ? 'checked' : ''} onchange="toggleCertificateCheck(${item.id})" class="w-5 h-5 accent-indigo-600 rounded cursor-pointer">
-                            <span class="text-sm font-medium text-slate-200 truncate ${item.checked ? 'line-through text-slate-500' : ''}">📄 ${item.text}</span>
+                    <div class="p-2.5 bg-slate-900 border ${item.checked ? 'border-slate-700 opacity-50' : 'border-indigo-600'} rounded-xl flex justify-between items-center gap-2">
+                        <div class="flex items-center gap-2 overflow-hidden">
+                            <input type="checkbox" ${item.checked ? 'checked' : ''} onchange="toggleCertificateCheck(${item.id})" class="w-4 h-4 accent-indigo-600 rounded cursor-pointer">
+                            <span class="text-xs font-medium text-slate-200 truncate ${item.checked ? 'line-through text-slate-500' : ''}">📄 ${item.text}</span>
                         </div>
-                        <button type="button" onclick="deleteCertificateItem(${item.id})" class="text-xs text-rose-400 hover:text-rose-300 font-bold px-2 py-1">✕ 삭제</button>
+                        <button type="button" onclick="deleteCertificateItem(${item.id})" class="text-xs text-rose-400 hover:text-rose-300 font-bold px-1.5 py-0.5">✕</button>
                     </div>
                 `;
             });
@@ -672,7 +676,7 @@
             document.getElementById('total-places-count').textContent = registeredPlaces.length;
 
             if (registeredPlaces.length === 0) {
-                container.innerHTML = `<div class="text-slate-400 text-xs col-span-2 py-8 text-center bg-slate-900 rounded-xl border border-slate-700">등록된 배송지가 없습니다. 위 폼에서 배송지를 등록해 보세요!</div>`;
+                container.innerHTML = `<div class="text-center py-8 text-slate-400 text-xs col-span-2 bg-slate-900 rounded-xl border border-slate-700">등록된 배송지가 없습니다. 위 폼에서 배송지를 등록해 보세요!</div>`;
                 return;
             }
 
