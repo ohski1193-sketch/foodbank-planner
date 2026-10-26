@@ -13,24 +13,11 @@
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
 
-    <!-- 카카오 지도 API -->
-    <script type="text/javascript" src="//dapi.kakao.com/v2/maps/sdk.js?appkey=bb4ed44dd682ef912b4c09ba8b10845f&libraries=services"></script>
-
     <!-- 카카오 내비 SDK 추가 -->
     <script src="https://t1.kakaocdn.net/kakao_js_sdk/2.7.2/kakao.min.js" crossorigin="anonymous"></script>
 
     <style>
         body { font-family: 'Pretendard', sans-serif; }
-        
-        /* 다크모드 스타일 지도를 위한 CSS 필터 */
-        .dark-map-container #map {
-            filter: invert(90%) hue-rotate(180deg) brightness(95%) contrast(90%);
-        }
-        .dark-map-container .custom-overlay {
-            filter: invert(0%) hue-rotate(0deg) !important;
-        }
-
-        /* 슬라이드 카러셀 터치 스크롤 스무스 */
         .carousel-container {
             scroll-behavior: smooth;
             scroll-snap-type: x mandatory;
@@ -49,7 +36,7 @@
                 <h1 class="text-2xl font-bold flex items-center gap-2">
                     🚚 <span class="text-emerald-400">나주시 기초푸드뱅크</span> 경로안내
                 </h1>
-                <p class="text-slate-400 text-xs mt-1">전직원 실시간 동기화 주간 배송지 & 스마트 지도 플래너</p>
+                <p class="text-slate-400 text-xs mt-1">전직원 실시간 동기화 주간 배송지 & 내비게이션 플래너</p>
             </div>
             <div id="header-badge" class="bg-emerald-950 text-emerald-400 border border-emerald-700 px-4 py-2 rounded-xl text-xs font-semibold">
                 진행률: 0 / 0건 (0%)
@@ -59,7 +46,7 @@
         <!-- 메인 탭 -->
         <div class="flex gap-2 mb-6 bg-slate-800 p-1.5 rounded-2xl border border-slate-700">
             <button type="button" onclick="switchMainTab('delivery')" id="main-tab-delivery" class="flex-1 py-3 rounded-xl font-bold text-xs sm:text-sm text-center transition bg-emerald-600 text-white shadow-sm">
-                🚛 주간 배송 목록 & 지도
+                🚛 주간 배송 목록 & 내비
             </button>
             <button type="button" onclick="switchMainTab('calendar')" id="main-tab-calendar" class="flex-1 py-3 rounded-xl font-bold text-xs sm:text-sm text-center transition text-slate-400 hover:text-slate-200">
                 📅 배송 특이사항
@@ -69,7 +56,7 @@
             </button>
         </div>
 
-        <!-- ==================== 1. 주간 배송 & 지도 통합 섹션 ==================== -->
+        <!-- ==================== 1. 주간 배송 & 내비게이션 통합 섹션 ==================== -->
         <div id="section-delivery" class="flex flex-col gap-5">
             <!-- 요일 선택 탭 -->
             <div class="flex gap-2">
@@ -120,30 +107,6 @@
                     </button>
                 </div>
             </div>
-
-            <!-- 3) 실시간 동선 지도 영역 (경로선 연결 적용) -->
-            <div class="dark-map-container bg-slate-800 p-4 rounded-2xl shadow-lg border border-slate-700 flex flex-col gap-3">
-                <div class="flex justify-between items-center border-b border-slate-700 pb-2">
-                    <h2 class="text-base font-bold text-white flex items-center gap-2">
-                        🗺️ <span id="map-day-title" class="text-emerald-400">월요일</span>실시간 배송 동선 지도
-                    </h2>
-                    <button type="button" onclick="getCurrentLocation()" class="text-xs bg-slate-700 hover:bg-slate-600 text-emerald-400 font-bold px-3 py-1.5 rounded-lg border border-slate-600 transition">
-                        📍 내 위치 추적
-                    </button>
-                </div>
-                <div id="map" class="w-full h-[400px] rounded-xl overflow-hidden border border-slate-700"></div>
-                
-                <div class="rounded-xl border border-emerald-700 bg-slate-950 p-4 space-y-2">
-                    <div class="text-xs text-emerald-400 font-bold">🚘 웹 내비게이션 모드 & 도로 경로 탐색</div>
-                    <div id="nav-target-name" class="text-lg font-bold">다음 배송지를 불러오는 중…</div>
-                    <div id="nav-guidance" class="text-sm text-slate-300">위치 권한을 허용하면 현재 위치와 목적지 도로 경로를 계산합니다.</div>
-                    <div class="flex gap-2">
-                        <button type="button" onclick="startWebNavigation()" class="flex-1 bg-emerald-600 hover:bg-emerald-500 rounded-lg py-2 text-sm font-bold">▶ 웹 내비 시작</button>
-                        <button type="button" onclick="stopWebNavigation()" class="bg-slate-700 hover:bg-slate-600 rounded-lg px-4 py-2 text-sm font-bold">■ 추적 종료</button>
-                    </div>
-                </div>
-            </div>
-
         </div>
 
         <!-- ==================== 2. 배송 특이사항 (캘린더) 섹션 ==================== -->
@@ -246,8 +209,8 @@
             appId: "1:476867511482:web:8402d210fba4d7fc516e83"
         };
 
-        // 길찾기 REST API 키는 브라우저에 두지 않습니다. /api/directions 서버를 통해 요청합니다.
-        
+        const REST_API_KEY = "356c03e59b6736b3e04bd07dca7aa77";
+
         firebase.initializeApp(firebaseConfig);
         const db = firebase.database();
 
@@ -255,17 +218,6 @@
         let registeredPlaces = [];
         let calendarNotes = {};
         let currentDay = '월';
-
-        let map = null;
-        let mapMarkers = [];
-        let dayRoutePolyline = null;
-        let userLocationMarker = null;
-        let geocoder = null;
-        let userPosition = null;
-        let locationWatchId = null;
-        let navTargetMarker = null;
-        let navGuideLine = null;
-        let navTargetCoords = null;
 
         let today = new Date();
         let calYear = today.getFullYear();
@@ -276,7 +228,7 @@
             if (typeof Kakao !== 'undefined') {
                 try {
                     if (!Kakao.isInitialized()) {
-                        Kakao.init('bb4ed44dd682ef912b4c09ba8b10845f');
+                        Kakao.init('356c03e59b6736b3e04bd07dca7aa77');
                     }
                 } catch (error) {
                     console.error('Kakao SDK initialization failed:', error);
@@ -286,7 +238,6 @@
             db.ref('delivery_store').on('value', (snapshot) => {
                 store = snapshot.val() || { '월': [], '화': [], '수': [], '목': [], '금': [] };
                 renderDelivery();
-                renderMap();
             });
 
             db.ref('registered_places').on('value', (snapshot) => {
@@ -301,7 +252,6 @@
             });
 
             changeDay('월');
-            setTimeout(() => { initMap(); }, 300);
         });
 
         function switchMainTab(tab) {
@@ -324,7 +274,6 @@
             if (tab === 'delivery') {
                 delSec.classList.remove('hidden');
                 delBtn.className = "flex-1 py-3 rounded-xl font-bold text-xs sm:text-sm text-center transition bg-emerald-600 text-white shadow-sm";
-                setTimeout(() => { if (map) map.relayout(); renderMap(); }, 100);
             } else if (tab === 'calendar') {
                 calSec.classList.remove('hidden');
                 calBtn.className = "flex-1 py-3 rounded-xl font-bold text-xs sm:text-sm text-center transition bg-emerald-600 text-white shadow-sm";
@@ -343,260 +292,7 @@
             if(activeBtn) activeBtn.className = "day-btn flex-1 py-3 rounded-xl font-bold text-sm bg-emerald-600 text-white shadow-md border border-emerald-600";
 
             document.getElementById('title-day').textContent = `${day}요일`;
-            document.getElementById('map-day-title').textContent = `${day}요일`;
-
             renderDelivery();
-            renderMap();
-            const nextTarget = (store[currentDay] || []).find(x => !x.done);
-            if (nextTarget && geocoder) setWebNavigationTarget(nextTarget);
-            else if (geocoder) setWebNavigationTarget(null);
-        }
-
-        // --- 지도 로직 (순차적 핀 및 동선 경로선 연결) ---
-        function initMap() {
-            if (typeof kakao === 'undefined' || !kakao.maps) return;
-            const mapContainer = document.getElementById('map');
-            if (!map) {
-                const options = { center: new kakao.maps.LatLng(35.016, 126.716), level: 7 };
-                map = new kakao.maps.Map(mapContainer, options);
-                geocoder = new kakao.maps.services.Geocoder();
-                getCurrentLocation();
-            }
-            renderMap();
-        }
-
-        function getCurrentLocation() {
-            if (!navigator.geolocation) {
-                alert('이 브라우저는 GPS 위치 추적을 지원하지 않습니다.');
-                return;
-            }
-            navigator.geolocation.getCurrentPosition((position) => {
-                updateUserPosition(position);
-                if (map && userPosition) map.setCenter(userPosition);
-            }, (error) => {
-                const msg = error.code === 1 ? '위치 권한이 거부되었습니다.' : '현재 위치를 가져오지 못했습니다.';
-                document.getElementById('nav-guidance').textContent = msg;
-            }, { enableHighAccuracy: true, timeout: 15000, maximumAge: 3000 });
-        }
-
-        function updateUserPosition(position) {
-            if (!map || typeof kakao === 'undefined' || !kakao.maps) return;
-            userPosition = new kakao.maps.LatLng(position.coords.latitude, position.coords.longitude);
-            if (userLocationMarker) userLocationMarker.setMap(null);
-            userLocationMarker = new kakao.maps.Marker({
-                map: map,
-                position: userPosition,
-                title: '현재 위치'
-            });
-            updateWebNavigationDisplay();
-        }
-
-        function startWebNavigation() {
-            const target = (store[currentDay] || []).find(x => !x.done);
-            if (!target) {
-                alert('남은 배송지가 없습니다.');
-                return;
-            }
-            if (!navigator.geolocation) {
-                alert('이 브라우저는 위치 추적을 지원하지 않습니다.');
-                return;
-            }
-            setWebNavigationTarget(target);
-            if (locationWatchId !== null) navigator.geolocation.clearWatch(locationWatchId);
-            locationWatchId = navigator.geolocation.watchPosition((position) => {
-                updateUserPosition(position);
-                if (userPosition && map) map.panTo(userPosition);
-            }, (error) => {
-                document.getElementById('nav-guidance').textContent = 'GPS 신호를 확인 중입니다.';
-            }, { enableHighAccuracy: true, maximumAge: 2000, timeout: 15000 });
-        }
-
-        function stopWebNavigation() {
-            if (locationWatchId !== null && navigator.geolocation) navigator.geolocation.clearWatch(locationWatchId);
-            locationWatchId = null;
-            document.getElementById('nav-guidance').textContent = 'GPS 추적을 종료했습니다.';
-        }
-
-        function setWebNavigationTarget(target) {
-            const nameEl = document.getElementById('nav-target-name');
-            if (!target) {
-                nameEl.textContent = '모든 배송 완료';
-                document.getElementById('nav-guidance').textContent = '오늘 배정된 배송을 모두 완료했습니다.';
-                navTargetCoords = null;
-                if (navTargetMarker) navTargetMarker.setMap(null);
-                clearNavigationLine();
-                lastRouteTargetKey = '';
-                lastRouteOrigin = null;
-                return;
-            }
-            nameEl.textContent = '다음 목적지: ' + target.name;
-            document.getElementById('nav-guidance').textContent = target.address + ' · 경로 찾는 중…';
-            lastRouteTargetKey = '';
-            lastRouteOrigin = null;
-            if (!geocoder) return;
-            geocoder.addressSearch(target.address, (result, status) => {
-                if (status !== kakao.maps.services.Status.OK || !result || !result.length) {
-                    document.getElementById('nav-guidance').textContent = '주소를 찾지 못했습니다: ' + target.address;
-                    return;
-                }
-                navTargetCoords = new kakao.maps.LatLng(Number(result[0].y), Number(result[0].x));
-                if (navTargetMarker) navTargetMarker.setMap(null);
-                navTargetMarker = new kakao.maps.Marker({ map, position: navTargetCoords, title: target.name });
-                map.setCenter(navTargetCoords);
-                map.setLevel(4);
-                updateWebNavigationDisplay(true);
-            });
-        }
-
-        let routeRequestInProgress = false;
-        let lastRouteRequestAt = 0;
-        let lastRouteOrigin = null;
-        let lastRouteTargetKey = '';
-
-        async function fetchKakaoMobilityDirections(origin, destination) {
-            const originStr = `${origin.getLng()},${origin.getLat()}`;
-            const destStr = `${destination.getLng()},${destination.getLat()}`;
-            const url = `/api/directions?origin=${encodeURIComponent(originStr)}&destination=${encodeURIComponent(destStr)}`;
-            try {
-                const response = await fetch(url);
-                if (!response.ok) {
-                    console.warn('길찾기 서버 응답 오류:', response.status, await response.text().catch(() => ''));
-                    return null;
-                }
-                const data = await response.json();
-                if (data.routes && data.routes.length > 0 && data.routes[0].result_code === 0) {
-                    const route = data.routes[0];
-                    const linePath = [];
-                    (route.sections || []).forEach(section => {
-                        (section.roads || []).forEach(road => {
-                            const vertices = road.vertexes || [];
-                            for (let i = 0; i + 1 < vertices.length; i += 2) {
-                                linePath.push(new kakao.maps.LatLng(Number(vertices[i + 1]), Number(vertices[i])));
-                            }
-                        });
-                    });
-                    return { path: linePath, distance: route.summary?.distance ?? 0, duration: route.summary?.duration ?? 0 };
-                }
-                console.warn('카카오 길찾기 결과:', data);
-            } catch (err) {
-                console.warn('길찾기 서버 호출 오류:', err);
-            }
-            return null;
-        }
-
-        function clearNavigationLine() {
-            if (navGuideLine) {
-                navGuideLine.setMap(null);
-                navGuideLine = null;
-            }
-        }
-
-        async function updateWebNavigationDisplay(force = false) {
-            if (!userPosition || !navTargetCoords || !map || routeRequestInProgress) return;
-            const now = Date.now();
-            const targetKey = `${navTargetCoords.getLat().toFixed(5)},${navTargetCoords.getLng().toFixed(5)}`;
-            const movedMeters = lastRouteOrigin
-                ? distanceBetweenPoints(lastRouteOrigin, userPosition)
-                : Infinity;
-            // GPS가 자주 갱신되어도 매번 API를 호출하지 않도록 100m 이동 또는 60초 경과 시 갱신
-            if (!force && targetKey === lastRouteTargetKey && movedMeters < 100 && now - lastRouteRequestAt < 60000) return;
-
-            routeRequestInProgress = true;
-            lastRouteRequestAt = now;
-            lastRouteOrigin = new kakao.maps.LatLng(userPosition.getLat(), userPosition.getLng());
-            lastRouteTargetKey = targetKey;
-            document.getElementById('nav-guidance').textContent = '실제 도로 경로를 계산하고 있습니다…';
-
-            try {
-                const routeData = await fetchKakaoMobilityDirections(userPosition, navTargetCoords);
-                clearNavigationLine();
-                if (routeData && routeData.path.length > 0) {
-                    navGuideLine = new kakao.maps.Polyline({
-                        map, path: routeData.path, strokeWeight: 6,
-                        strokeColor: '#10b981', strokeOpacity: 0.9, strokeStyle: 'solid'
-                    });
-                    const distKm = (routeData.distance / 1000).toFixed(1);
-                    const durationMin = Math.round(routeData.duration / 60);
-                    document.getElementById('nav-guidance').textContent =
-                        `🚘 실제 도로 경로 · 약 ${distKm}km · 예상 ${durationMin}분 (음성 안내는 카카오내비 앱 이용)`;
-                    const bounds = new kakao.maps.LatLngBounds();
-                    routeData.path.forEach(point => bounds.extend(point));
-                    map.setBounds(bounds);
-                } else {
-                    document.getElementById('nav-guidance').textContent =
-                        '도로 경로를 가져오지 못했습니다. 서버 실행 상태와 REST API 키를 확인해 주세요. 카카오내비 버튼으로 외부 안내를 이용할 수 있습니다.';
-                }
-            } finally {
-                routeRequestInProgress = false;
-            }
-        }
-
-        function distanceBetweenPoints(a, b) {
-            const toRad = value => value * Math.PI / 180;
-            const lat1 = toRad(a.getLat()), lat2 = toRad(b.getLat());
-            const dLat = lat2 - lat1, dLng = toRad(b.getLng() - a.getLng());
-            const h = Math.sin(dLat / 2) ** 2 + Math.cos(lat1) * Math.cos(lat2) * Math.sin(dLng / 2) ** 2;
-            return 6371000 * 2 * Math.atan2(Math.sqrt(h), Math.sqrt(1 - h));
-        }
-
-        // 해당 요일 배송지들을 순서대로 마커를 찍고 동선 선(Polyline)으로 연결
-        function renderMap() {
-            if (!map || typeof kakao === 'undefined' || !kakao.maps) return;
-
-            mapMarkers.forEach(m => m.setMap(null));
-            mapMarkers = [];
-            if (dayRoutePolyline) {
-                dayRoutePolyline.setMap(null);
-                dayRoutePolyline = null;
-            }
-
-            const list = store[currentDay] || [];
-            if (list.length === 0) return;
-
-            const bounds = new kakao.maps.LatLngBounds();
-            const coordsList = [];
-
-            let index = 0;
-            function processNextAddress() {
-                if (index >= list.length) {
-                    if (coordsList.length > 1) {
-                        dayRoutePolyline = new kakao.maps.Polyline({
-                            map: map,
-                            path: coordsList,
-                            strokeWeight: 5,
-                            strokeColor: '#10b981',
-                            strokeOpacity: 0.85,
-                            strokeStyle: 'solid'
-                        });
-                    }
-                    return;
-                }
-
-                const item = list[index];
-                const idx = index;
-                index++;
-
-                geocoder.addressSearch(item.address, function(result, status) {
-                    if (status === kakao.maps.services.Status.OK && result.length > 0) {
-                        const coords = new kakao.maps.LatLng(result[0].y, result[0].x);
-                        coordsList[idx] = coords;
-
-                        const marker = new kakao.maps.Marker({ map: map, position: coords });
-                        mapMarkers.push(marker);
-                        bounds.extend(coords);
-
-                        const infowindow = new kakao.maps.InfoWindow({
-                            content: `<div class="custom-overlay" style="padding:6px 10px;font-size:12px;font-weight:bold;color:#000;">${idx + 1}. ${item.name}</div>`
-                        });
-                        kakao.maps.event.addListener(marker, 'click', function() {
-                            infowindow.open(map, marker);
-                        });
-                        map.setBounds(bounds);
-                    }
-                    processNextAddress();
-                });
-            }
-            processNextAddress();
         }
 
         function saveStoreToFirebase() { db.ref('delivery_store').set(store); }
@@ -759,16 +455,9 @@
             const list = store[currentDay] || [];
             const target = list.find(x => x.id === id);
             if (!target) return;
-            const wasDone = !!target.done;
             target.done = !target.done;
             saveStoreToFirebase();
-            if (!wasDone && target.done) {
-                const next = list.find(x => !x.done);
-                setWebNavigationTarget(next || null);
-                renderDelivery();
-            } else if (wasDone && !target.done) {
-                setWebNavigationTarget(target);
-            }
+            renderDelivery();
         }
 
         function updateMemo(id, text) {
@@ -797,54 +486,44 @@
             }
         }
 
-        // --- 카카오내비 앱 다이렉트 연동 함수 ---
-        function goNavi(app, address, placeName = '') {
+        // --- 카카오내비 앱 다이렉트 연동 함수 (카카오모빌리티 가이드 반영) ---
+        function goNavi(address, placeName = '') {
+            const isMobile = /Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
             const encoded = encodeURIComponent(address);
 
-            if (app === 'kakao') {
-                const isMobile = /Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
-
-                if (!isMobile) {
-                    window.open(`https://map.kakao.com/link/search/${encoded}`, '_blank');
-                    return;
-                }
-
-                if (typeof kakao === 'undefined' || !kakao.maps || !geocoder) {
-                    alert('카카오 지도 API를 불러오지 못했습니다.');
-                    return;
-                }
-
-                geocoder.addressSearch(address, function(result, status) {
-                    if (status === kakao.maps.services.Status.OK && result.length > 0) {
-                        const x = Number(result[0].x);
-                        const y = Number(result[0].y);
-                        const name = placeName || address;
-
-                        if (typeof Kakao !== 'undefined' && Kakao.isInitialized && Kakao.isInitialized() && Kakao.Navi) {
-                            Kakao.Navi.start({
-                                name: name,
-                                x: x,
-                                y: y,
-                                coordType: 'wgs84'
-                            });
-                        } else {
-                            window.location.href = `https://map.kakao.com/link/search/${encoded}`;
-                        }
-                    } else {
-                        alert('주소를 좌표로 변환하지 못했습니다. 주소를 확인해 주세요.');
-                    }
-                });
-
+            if (!isMobile) {
+                window.open(`https://map.kakao.com/link/search/${encoded}`, '_blank');
                 return;
             }
 
-            if (app === 'tmap') {
-                window.open(`https://surl.tmap.co.kr/search?keyword=${encoded}`, '_blank');
-            }
+            // 카카오모빌리티 API(주소 -> 좌표 변환 후 내비 앱 실행)
+            fetch(`https://dapi.kakao.com/v2/local/search/address.json?query=${encoded}`, {
+                headers: { 'Authorization': `KakaoAK ${REST_API_KEY}` }
+            })
+            .then(res => res.json())
+            .then(data => {
+                if (data.documents && data.documents.length > 0) {
+                    const x = Number(data.documents[0].x);
+                    const y = Number(data.documents[0].y);
+                    const name = placeName || address;
 
-            if (app === 'naver') {
-                window.open(`https://map.naver.com/v5/search/${encoded}`, '_blank');
-            }
+                    if (typeof Kakao !== 'undefined' && Kakao.isInitialized && Kakao.isInitialized() && Kakao.Navi) {
+                        Kakao.Navi.start({
+                            name: name,
+                            x: x,
+                            y: y,
+                            coordType: 'wgs84'
+                        });
+                    } else {
+                        window.location.href = `https://map.kakao.com/link/search/${encoded}`;
+                    }
+                } else {
+                    alert('주소를 좌표로 변환하지 못했습니다. 주소를 확인해 주세요.');
+                }
+            })
+            .catch(() => {
+                window.location.href = `https://map.kakao.com/link/search/${encoded}`;
+            });
         }
 
         // 목적지 카러셀 슬라이더 스크롤 함수
@@ -888,8 +567,8 @@
                                 <p class="text-xs text-slate-400 truncate mt-0.5">📍 ${item.address}</p>
                                 <p class="text-xs text-slate-400 truncate">📞 ${item.phone} | 📦 ${item.item}</p>
                             </div>
-                            <button type="button" onclick="goNavi('kakao', '${item.address}', '${item.name}')" class="w-full bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs py-2 rounded-lg transition shadow flex items-center justify-center gap-1">
-                                🚀 카카오내비 길안내
+                            <button type="button" onclick="goNavi('${item.address}', '${item.name}')" class="w-full bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs py-2 rounded-lg transition shadow flex items-center justify-center gap-1">
+                                🚀 카카오내비로 바로 길안내
                             </button>
                         </div>
                     `;
@@ -932,9 +611,9 @@
                             <input type="text" value="${item.memo || ''}" onchange="updateMemo(${item.id}, this.value)" placeholder="📝 현장 특이사항 메모 (자동저장)" class="w-full px-2.5 py-1 border border-slate-700 rounded-lg text-xs bg-slate-950 text-slate-200 focus:outline-none focus:ring-1 focus:ring-emerald-500">
                         </div>
                         <div class="flex gap-1.5 pt-1">
-                            <button type="button" onclick="goNavi('kakao', '${item.address}', '${item.name}')" class="flex-1 bg-yellow-500 hover:bg-yellow-400 text-slate-950 font-bold py-1.5 rounded-lg text-xs">카카오내비</button>
-                            <button type="button" onclick="goNavi('tmap', '${item.address}')" class="flex-1 bg-red-600 hover:bg-red-500 text-white font-bold py-1.5 rounded-lg text-xs">TMAP</button>
-                            <button type="button" onclick="goNavi('naver', '${item.address}')" class="flex-1 bg-green-600 hover:bg-green-500 text-white font-bold py-1.5 rounded-lg text-xs">네이버지도</button>
+                            <button type="button" onclick="goNavi('${item.address}', '${item.name}')" class="flex-1 bg-emerald-600 hover:bg-emerald-500 text-white font-bold py-2 rounded-lg text-xs">🚀 카카오내비 길안내</button>
+                            <button type="button" onclick="window.open('https://surl.tmap.co.kr/search?keyword=' + encodeURIComponent('${item.address}'), '_blank')" class="bg-slate-700 hover:bg-slate-600 text-slate-300 font-bold px-3 py-2 rounded-lg text-xs">TMAP</button>
+                            <button type="button" onclick="window.open('https://map.naver.com/v5/search/' + encodeURIComponent('${item.address}'), '_blank')" class="bg-slate-700 hover:bg-slate-600 text-slate-300 font-bold px-3 py-2 rounded-lg text-xs">네이버</button>
                         </div>
                     </div>
                 `;
