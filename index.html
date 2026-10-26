@@ -88,7 +88,20 @@
                 </div>
             </div>
 
-            <!-- 2) 요일별 상세 배송 목록 -->
+            <!-- 2) [신설] 비정기/조건부 기부처 특별 안내 보드 (배송 순서 바로 아래) -->
+            <div class="bg-slate-800 border-2 border-amber-500 p-4 rounded-2xl shadow-lg flex flex-col gap-3">
+                <div class="flex justify-between items-center border-b border-slate-700 pb-2">
+                    <span class="text-xs text-amber-400 font-extrabold tracking-wide uppercase flex items-center gap-1">
+                        ⭐ 비정기 및 조건부 기부처 특별 안내 (돌박사·부림·열정국밥·온시 등)
+                    </span>
+                    <span class="text-[11px] text-slate-400">전체 공유됨</span>
+                </div>
+                <div id="irregular-board-container" class="grid grid-cols-1 md:grid-cols-2 gap-3">
+                    <div class="text-center py-4 text-slate-400 text-xs col-span-2">등록된 비정기 기부처가 없습니다. [전체 배송지 관리]에서 등록해 보세요!</div>
+                </div>
+            </div>
+
+            <!-- 3) 요일별 상세 배송 목록 -->
             <div class="bg-slate-800 p-5 rounded-2xl shadow-lg border border-slate-700">
                 <div class="flex justify-between items-center border-b border-slate-700 pb-2 mb-4">
                     <h2 class="text-base font-bold text-white">
@@ -158,7 +171,7 @@
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
                     <div>
                         <label class="block text-xs font-bold text-slate-400 mb-1">배송처명 *</label>
-                        <input type="text" id="input-name" placeholder="예: 효사랑 나눔의집" class="w-full px-3 py-2 bg-slate-900 border border-slate-700 text-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500">
+                        <input type="text" id="input-name" placeholder="예: 돌박사 / 부림 / 온시베이커리" class="w-full px-3 py-2 bg-slate-900 border border-slate-700 text-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500">
                     </div>
                     <div>
                         <label class="block text-xs font-bold text-slate-400 mb-1">도로명 주소 *</label>
@@ -169,8 +182,8 @@
                         <input type="text" id="input-phone" placeholder="예: 061-123-4567" class="w-full px-3 py-2 bg-slate-900 border border-slate-700 text-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500">
                     </div>
                     <div>
-                        <label class="block text-xs font-bold text-slate-400 mb-1">배송 물량 / 기본 품목</label>
-                        <input type="text" id="input-item" placeholder="예: 식료품 상자 3개" class="w-full px-3 py-2 bg-slate-900 border border-slate-700 text-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500">
+                        <label class="block text-xs font-bold text-slate-400 mb-1">방문 규칙 / 비정기 메모 *</label>
+                        <input type="text" id="input-item" placeholder="예: 매월 둘째주 일요일 14:30 / 오전 9~10시 문자" class="w-full px-3 py-2 bg-slate-900 border border-slate-700 text-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500">
                     </div>
                 </div>
 
@@ -184,13 +197,13 @@
                 </div>
             </div>
 
-            <!-- 2) 등록된 배송지 전체 목록 & 수정/요일 추가 -->
+            <!-- 2) 등록된 배송지 전체 목록 & 수정/요일 추가 / 비정기 등록 -->
             <div class="bg-slate-800 p-5 rounded-2xl shadow-lg border border-slate-700 flex flex-col gap-3">
                 <div class="flex justify-between items-center border-b border-slate-700 pb-2">
                     <h2 class="text-base font-bold text-white">
                         ⭐ 등록된 배송지 목록 (<span id="total-places-count">0</span>곳)
                     </h2>
-                    <span class="text-xs text-slate-400">원하는 요일 버튼을 눌러 동선에 추가하세요</span>
+                    <span class="text-xs text-slate-400">요일 버튼을 누르거나 비정기 보드에 추가하세요</span>
                 </div>
                 <div id="registered-places-container" class="grid grid-cols-1 md:grid-cols-2 gap-3 max-h-[500px] overflow-y-auto pr-1"></div>
             </div>
@@ -215,6 +228,7 @@
         const db = firebase.database();
 
         let store = { '월': [], '화': [], '수': [], '목': [], '금': [] };
+        let irregularStore = []; // 비정기 기부처 저장소
         let registeredPlaces = [];
         let calendarNotes = {};
         let currentDay = '월';
@@ -238,6 +252,12 @@
             db.ref('delivery_store').on('value', (snapshot) => {
                 store = snapshot.val() || { '월': [], '화': [], '수': [], '목': [], '금': [] };
                 renderDelivery();
+            });
+
+            db.ref('irregular_store').on('value', (snapshot) => {
+                irregularStore = snapshot.val() || [];
+                renderIrregularBoard();
+                renderRegisteredPlaces();
             });
 
             db.ref('registered_places').on('value', (snapshot) => {
@@ -296,6 +316,7 @@
         }
 
         function saveStoreToFirebase() { db.ref('delivery_store').set(store); }
+        function saveIrregularToFirebase() { db.ref('irregular_store').set(irregularStore); }
         function saveRegisteredPlacesToFirebase() { db.ref('registered_places').set(registeredPlaces); }
         function saveCalendarToFirebase() { db.ref('calendar_notes').set(calendarNotes); }
 
@@ -314,9 +335,9 @@
                     registeredPlaces[idx].name = name;
                     registeredPlaces[idx].address = address;
                     registeredPlaces[idx].phone = phone || '연락처 없음';
-                    registeredPlaces[idx].item = item || '기본 물량';
+                    registeredPlaces[idx].item = item || '비정기 방문 규칙';
                     saveRegisteredPlacesToFirebase();
-                    alert(`'${name}' 배송지 정보가 수정되었습니다!`);
+                    alert(`'${name}' 정보가 수정되었습니다!`);
                 }
             } else {
                 const newPlace = {
@@ -324,7 +345,7 @@
                     name: name,
                     address: address,
                     phone: phone || '연락처 없음',
-                    item: item || '기본 물량'
+                    item: item || '비정기 방문 규칙'
                 };
                 registeredPlaces.push(newPlace);
                 saveRegisteredPlacesToFirebase();
@@ -342,7 +363,7 @@
             document.getElementById('input-name').value = target.name;
             document.getElementById('input-address').value = target.address;
             document.getElementById('input-phone').value = target.phone === '연락처 없음' ? '' : target.phone;
-            document.getElementById('input-item').value = target.item === '기본 물량' ? '' : target.item;
+            document.getElementById('input-item').value = target.item === '비정기 방문 규칙' ? '' : target.item;
 
             document.getElementById('form-title').textContent = `✏️ 배송지 정보 수정 (${target.name})`;
             document.getElementById('btn-save-place').textContent = `💾 배송지 정보 수정 완료`;
@@ -382,11 +403,60 @@
             alert(`'${place.name}' 배송지가 ${day}요일 동선에 배정되었습니다!`);
         }
 
+        function addPlaceToIrregular(place) {
+            const itemData = {
+                id: Date.now(),
+                name: place.name,
+                address: place.address,
+                phone: place.phone,
+                rule: place.item || '비정기 방문 조건'
+            };
+            irregularStore.push(itemData);
+            saveIrregularToFirebase();
+            alert(`'${place.name}' 기부처가 상단 [비정기 특별 안내 보드]에 추가되었습니다!`);
+        }
+
+        function deleteIrregularItem(id) {
+            if (confirm('이 비정기 기부처를 특별 안내 보드에서 삭제하시겠습니까?')) {
+                irregularStore = irregularStore.filter(x => x.id !== id);
+                saveIrregularToFirebase();
+            }
+        }
+
         function deleteRegisteredPlace(id) {
             if (confirm('이 배송지를 저장소 모음에서 완전히 삭제하시겠습니까?')) {
                 registeredPlaces = registeredPlaces.filter(x => x.id !== id);
                 saveRegisteredPlacesToFirebase();
             }
+        }
+
+        function renderIrregularBoard() {
+            const boardContainer = document.getElementById('irregular-board-container');
+            if (irregularStore.length === 0) {
+                boardContainer.innerHTML = `<div class="text-center py-4 text-slate-400 text-xs col-span-2">등록된 비정기 기부처가 없습니다. [전체 배송지 관리] 탭에서 등록해 보세요!</div>`;
+                return;
+            }
+
+            let html = '';
+            irregularStore.forEach((item) => {
+                html += `
+                    <div class="p-3 bg-slate-900 border border-amber-600 rounded-xl flex flex-col justify-between gap-2 shadow-sm">
+                        <div>
+                            <div class="flex justify-between items-center mb-1">
+                                <span class="text-[11px] font-extrabold text-amber-400">⭐ 비정기/조건부</span>
+                                <button type="button" onclick="deleteIrregularItem(${item.id})" class="text-[11px] text-rose-400 hover:text-rose-300 font-bold px-1">✕ 삭제</button>
+                            </div>
+                            <h3 class="text-sm font-bold text-white truncate">${item.name}</h3>
+                            <p class="text-xs text-amber-200 mt-0.5 font-medium">📌 규칙: ${item.rule}</p>
+                            <p class="text-xs text-slate-400 truncate">📍 ${item.address} | 📞 ${item.phone}</p>
+                        </div>
+                        <button type="button" onclick="goNavi('${item.address}', '${item.name}')" class="w-full bg-amber-600 hover:bg-amber-500 text-white font-bold text-xs py-2 rounded-lg transition shadow flex items-center justify-center gap-1">
+                            🚀 카카오내비로 바로 길안내
+                        </button>
+                    </div>
+                `;
+            });
+            boardContainer.innerHTML = html;
         }
 
         function renderRegisteredPlaces() {
@@ -413,15 +483,20 @@
                                 <button type="button" onclick="deleteRegisteredPlace(${place.id})" class="text-slate-500 hover:text-rose-400 text-xs font-bold px-1">✕</button>
                             </div>
                         </div>
-                        <div class="flex items-center justify-between border-t border-slate-800 pt-2 gap-1">
-                            <span class="text-[11px] font-bold text-slate-400">동선 배정:</span>
-                            <div class="flex gap-1">
-                                <button type="button" onclick="addPlaceToDay(${JSON.stringify(place).replace(/"/g, '&quot;')}, '월')" class="bg-emerald-950 hover:bg-emerald-600 hover:text-white text-emerald-400 font-bold text-xs px-2 py-0.5 rounded border border-emerald-700 transition">월</button>
-                                <button type="button" onclick="addPlaceToDay(${JSON.stringify(place).replace(/"/g, '&quot;')}, '화')" class="bg-emerald-950 hover:bg-emerald-600 hover:text-white text-emerald-400 font-bold text-xs px-2 py-0.5 rounded border border-emerald-700 transition">화</button>
-                                <button type="button" onclick="addPlaceToDay(${JSON.stringify(place).replace(/"/g, '&quot;')}, '수')" class="bg-emerald-950 hover:bg-emerald-600 hover:text-white text-emerald-400 font-bold text-xs px-2 py-0.5 rounded border border-emerald-700 transition">수</button>
-                                <button type="button" onclick="addPlaceToDay(${JSON.stringify(place).replace(/"/g, '&quot;')}, '목')" class="bg-emerald-950 hover:bg-emerald-600 hover:text-white text-emerald-400 font-bold text-xs px-2 py-0.5 rounded border border-emerald-700 transition">목</button>
-                                <button type="button" onclick="addPlaceToDay(${JSON.stringify(place).replace(/"/g, '&quot;')}, '금')" class="bg-emerald-950 hover:bg-emerald-600 hover:text-white text-emerald-400 font-bold text-xs px-2 py-0.5 rounded border border-emerald-700 transition">금</button>
+                        <div class="flex flex-col border-t border-slate-800 pt-2 gap-1.5">
+                            <div class="flex items-center justify-between">
+                                <span class="text-[11px] font-bold text-slate-400">요일별 동선 배정:</span>
+                                <div class="flex gap-1">
+                                    <button type="button" onclick="addPlaceToDay(${JSON.stringify(place).replace(/"/g, '&quot;')}, '월')" class="bg-emerald-950 hover:bg-emerald-600 text-emerald-400 font-bold text-xs px-2 py-0.5 rounded border border-emerald-700 transition">월</button>
+                                    <button type="button" onclick="addPlaceToDay(${JSON.stringify(place).replace(/"/g, '&quot;')}, '화')" class="bg-emerald-950 hover:bg-emerald-600 text-emerald-400 font-bold text-xs px-2 py-0.5 rounded border border-emerald-700 transition">화</button>
+                                    <button type="button" onclick="addPlaceToDay(${JSON.stringify(place).replace(/"/g, '&quot;')}, '수')" class="bg-emerald-950 hover:bg-emerald-600 text-emerald-400 font-bold text-xs px-2 py-0.5 rounded border border-emerald-700 transition">수</button>
+                                    <button type="button" onclick="addPlaceToDay(${JSON.stringify(place).replace(/"/g, '&quot;')}, '목')" class="bg-emerald-950 hover:bg-emerald-600 text-emerald-400 font-bold text-xs px-2 py-0.5 rounded border border-emerald-700 transition">목</button>
+                                    <button type="button" onclick="addPlaceToDay(${JSON.stringify(place).replace(/"/g, '&quot;')}, '금')" class="bg-emerald-950 hover:bg-emerald-600 text-emerald-400 font-bold text-xs px-2 py-0.5 rounded border border-emerald-700 transition">금</button>
+                                </div>
                             </div>
+                            <button type="button" onclick="addPlaceToIrregular(${JSON.stringify(place).replace(/"/g, '&quot;')})" class="w-full bg-amber-950 hover:bg-amber-600 hover:text-white text-amber-400 font-bold text-xs py-1.5 rounded border border-amber-700 transition flex items-center justify-center gap-1">
+                                ⭐ 비정기 특별 안내 보드에 상시 띄우기 (돌박사/부림/열정국밥 등)
+                            </button>
                         </div>
                     </div>
                 `;
@@ -486,7 +561,7 @@
             }
         }
 
-        // --- 카카오내비 앱 다이렉트 연동 함수 (카카오모빌리티 가이드 반영) ---
+        // --- 카카오내비 앱 다이렉트 연동 함수 ---
         function goNavi(address, placeName = '') {
             const isMobile = /Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
             const encoded = encodeURIComponent(address);
@@ -496,7 +571,6 @@
                 return;
             }
 
-            // 카카오모빌리티 API(주소 -> 좌표 변환 후 내비 앱 실행)
             fetch(`https://dapi.kakao.com/v2/local/search/address.json?query=${encoded}`, {
                 headers: { 'Authorization': `KakaoAK ${REST_API_KEY}` }
             })
@@ -526,7 +600,6 @@
             });
         }
 
-        // 목적지 카러셀 슬라이더 스크롤 함수
         function scrollCarousel(direction) {
             const container = document.getElementById('carousel-container');
             if (!container) return;
@@ -568,7 +641,7 @@
                                 <p class="text-xs text-slate-400 truncate">📞 ${item.phone} | 📦 ${item.item}</p>
                             </div>
                             <button type="button" onclick="goNavi('${item.address}', '${item.name}')" class="w-full bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs py-2 rounded-lg transition shadow flex items-center justify-center gap-1">
-                                🚀 카카오내비로 바로 길안내
+                                🚀 카카오내비 길안내
                             </button>
                         </div>
                     `;
