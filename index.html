@@ -67,6 +67,21 @@
                 <button type="button" onclick="changeDay('금')" id="tab-금" class="day-btn flex-1 py-3 rounded-xl font-bold text-sm bg-slate-800 text-slate-400 border border-slate-700 shadow-sm">금</button>
             </div>
 
+            <!-- [신설] 요일별 밑반찬통 수령 및 기탁서 체크리스트 보드 -->
+            <div class="bg-slate-800 border-2 border-blue-500 p-4 rounded-2xl shadow-lg flex flex-col gap-3">
+                <div class="flex justify-between items-center border-b border-slate-700 pb-2">
+                    <span class="text-xs text-blue-400 font-extrabold tracking-wide uppercase flex items-center gap-1">
+                        🍱 <span id="side-dish-day-title">월요일</span> 밑반찬통 수령 및 기탁서 체크
+                    </span>
+                    <button type="button" onclick="addSideDishItem()" class="bg-blue-600 hover:bg-blue-500 text-white font-bold px-2.5 py-1 rounded-lg text-xs">
+                        + 항목 추가
+                    </button>
+                </div>
+                <div id="side-dish-container" class="flex flex-col gap-2">
+                    <div class="text-center py-4 text-slate-400 text-xs">해당 요일의 반찬통/기탁처 항목이 없습니다. [+ 항목 추가]를 눌러 등록하세요!</div>
+                </div>
+            </div>
+
             <!-- 1) 배송 목적지 실시간 좌우 슬라이더 (카러셀) -->
             <div class="bg-slate-800 border-2 border-emerald-500 p-4 rounded-2xl shadow-lg flex flex-col gap-3">
                 <div class="flex justify-between items-center border-b border-slate-700 pb-2">
@@ -88,7 +103,7 @@
                 </div>
             </div>
 
-            <!-- 2) [신설] 비정기/조건부 기부처 특별 안내 보드 (배송 순서 바로 아래) -->
+            <!-- 2) 비정기/조건부 기부처 특별 안내 보드 -->
             <div class="bg-slate-800 border-2 border-amber-500 p-4 rounded-2xl shadow-lg flex flex-col gap-3">
                 <div class="flex justify-between items-center border-b border-slate-700 pb-2">
                     <span class="text-xs text-amber-400 font-extrabold tracking-wide uppercase flex items-center gap-1">
@@ -171,7 +186,7 @@
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
                     <div>
                         <label class="block text-xs font-bold text-slate-400 mb-1">배송처명 *</label>
-                        <input type="text" id="input-name" placeholder="예: 돌박사 / 부림 / 온시베이커리" class="w-full px-3 py-2 bg-slate-900 border border-slate-700 text-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500">
+                        <input type="text" id="input-name" placeholder="예: 효사랑 나눔의집" class="w-full px-3 py-2 bg-slate-900 border border-slate-700 text-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500">
                     </div>
                     <div>
                         <label class="block text-xs font-bold text-slate-400 mb-1">도로명 주소 *</label>
@@ -182,8 +197,8 @@
                         <input type="text" id="input-phone" placeholder="예: 061-123-4567" class="w-full px-3 py-2 bg-slate-900 border border-slate-700 text-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500">
                     </div>
                     <div>
-                        <label class="block text-xs font-bold text-slate-400 mb-1">방문 규칙 / 비정기 메모 *</label>
-                        <input type="text" id="input-item" placeholder="예: 매월 둘째주 일요일 14:30 / 오전 9~10시 문자" class="w-full px-3 py-2 bg-slate-900 border border-slate-700 text-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500">
+                        <label class="block text-xs font-bold text-slate-400 mb-1">배송 물량 / 규칙</label>
+                        <input type="text" id="input-item" placeholder="예: 식료품 상자 3개" class="w-full px-3 py-2 bg-slate-900 border border-slate-700 text-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500">
                     </div>
                 </div>
 
@@ -197,7 +212,7 @@
                 </div>
             </div>
 
-            <!-- 2) 등록된 배송지 전체 목록 & 수정/요일 추가 / 비정기 등록 -->
+            <!-- 2) 등록된 배송지 전체 목록 & 수정/요일 추가 -->
             <div class="bg-slate-800 p-5 rounded-2xl shadow-lg border border-slate-700 flex flex-col gap-3">
                 <div class="flex justify-between items-center border-b border-slate-700 pb-2">
                     <h2 class="text-base font-bold text-white">
@@ -228,7 +243,8 @@
         const db = firebase.database();
 
         let store = { '월': [], '화': [], '수': [], '목': [], '금': [] };
-        let irregularStore = []; // 비정기 기부처 저장소
+        let sideDishStore = { '월': [], '화': [], '수': [], '목': [], '금': [] }; // 요일별 반찬통 체크리스트
+        let irregularStore = [];
         let registeredPlaces = [];
         let calendarNotes = {};
         let currentDay = '월';
@@ -252,6 +268,11 @@
             db.ref('delivery_store').on('value', (snapshot) => {
                 store = snapshot.val() || { '월': [], '화': [], '수': [], '목': [], '금': [] };
                 renderDelivery();
+            });
+
+            db.ref('side_dish_store').on('value', (snapshot) => {
+                sideDishStore = snapshot.val() || { '월': [], '화': [], '수': [], '목': [], '금': [] };
+                renderSideDishBoard();
             });
 
             db.ref('irregular_store').on('value', (snapshot) => {
@@ -312,13 +333,70 @@
             if(activeBtn) activeBtn.className = "day-btn flex-1 py-3 rounded-xl font-bold text-sm bg-emerald-600 text-white shadow-md border border-emerald-600";
 
             document.getElementById('title-day').textContent = `${day}요일`;
+            document.getElementById('side-dish-day-title').textContent = `${day}요일`;
             renderDelivery();
+            renderSideDishBoard();
         }
 
         function saveStoreToFirebase() { db.ref('delivery_store').set(store); }
+        function saveSideDishToFirebase() { db.ref('side_dish_store').set(sideDishStore); }
         function saveIrregularToFirebase() { db.ref('irregular_store').set(irregularStore); }
         function saveRegisteredPlacesToFirebase() { db.ref('registered_places').set(registeredPlaces); }
         function saveCalendarToFirebase() { db.ref('calendar_notes').set(calendarNotes); }
+
+        // --- 요일별 반찬통 체크리스트 로직 ---
+        function addSideDishItem() {
+            const name = prompt(`[${currentDay}요일] 수령할 기탁처 또는 반찬통 항목명을 입력하세요 (예: 행복복지관 반찬통 15개):`);
+            if (!name || !name.trim()) return;
+
+            const item = {
+                id: Date.now(),
+                text: name.trim(),
+                checked: false
+            };
+
+            if (!sideDishStore[currentDay]) sideDishStore[currentDay] = [];
+            sideDishStore[currentDay].push(item);
+            saveSideDishToFirebase();
+        }
+
+        function toggleSideDishCheck(id) {
+            const list = sideDishStore[currentDay] || [];
+            const target = list.find(x => x.id === id);
+            if (target) {
+                target.checked = !target.checked;
+                saveSideDishToFirebase();
+            }
+        }
+
+        function deleteSideDishItem(id) {
+            sideDishStore[currentDay] = (sideDishStore[currentDay] || []).filter(x => x.id !== id);
+            saveSideDishToFirebase();
+        }
+
+        function renderSideDishBoard() {
+            const container = document.getElementById('side-dish-container');
+            const list = sideDishStore[currentDay] || [];
+
+            if (list.length === 0) {
+                container.innerHTML = `<div class="text-center py-4 text-slate-400 text-xs">📍 ${currentDay}요일에 등록된 반찬통/기탁서 수령 항목이 없습니다. [+ 항목 추가]를 눌러 등록하세요!</div>`;
+                return;
+            }
+
+            let html = '';
+            list.forEach((item) => {
+                html += `
+                    <div class="p-3 bg-slate-900 border ${item.checked ? 'border-slate-700 opacity-50' : 'border-blue-600'} rounded-xl flex justify-between items-center gap-2">
+                        <div class="flex items-center gap-3 overflow-hidden">
+                            <input type="checkbox" ${item.checked ? 'checked' : ''} onchange="toggleSideDishCheck(${item.id})" class="w-5 h-5 accent-blue-600 rounded cursor-pointer">
+                            <span class="text-sm font-bold text-white truncate ${item.checked ? 'line-through text-slate-500' : ''}">${item.text}</span>
+                        </div>
+                        <button type="button" onclick="deleteSideDishItem(${item.id})" class="text-xs text-rose-400 hover:text-rose-300 font-bold px-2 py-1">✕ 삭제</button>
+                    </div>
+                `;
+            });
+            container.innerHTML = html;
+        }
 
         function handleSavePlace() {
             const editId = document.getElementById('edit-place-id').value;
@@ -335,7 +413,7 @@
                     registeredPlaces[idx].name = name;
                     registeredPlaces[idx].address = address;
                     registeredPlaces[idx].phone = phone || '연락처 없음';
-                    registeredPlaces[idx].item = item || '비정기 방문 규칙';
+                    registeredPlaces[idx].item = item || '기본 물량';
                     saveRegisteredPlacesToFirebase();
                     alert(`'${name}' 정보가 수정되었습니다!`);
                 }
@@ -345,7 +423,7 @@
                     name: name,
                     address: address,
                     phone: phone || '연락처 없음',
-                    item: item || '비정기 방문 규칙'
+                    item: item || '기본 물량'
                 };
                 registeredPlaces.push(newPlace);
                 saveRegisteredPlacesToFirebase();
@@ -363,7 +441,7 @@
             document.getElementById('input-name').value = target.name;
             document.getElementById('input-address').value = target.address;
             document.getElementById('input-phone').value = target.phone === '연락처 없음' ? '' : target.phone;
-            document.getElementById('input-item').value = target.item === '비정기 방문 규칙' ? '' : target.item;
+            document.getElementById('input-item').value = target.item === '기본 물량' ? '' : target.item;
 
             document.getElementById('form-title').textContent = `✏️ 배송지 정보 수정 (${target.name})`;
             document.getElementById('btn-save-place').textContent = `💾 배송지 정보 수정 완료`;
@@ -433,7 +511,7 @@
         function renderIrregularBoard() {
             const boardContainer = document.getElementById('irregular-board-container');
             if (irregularStore.length === 0) {
-                boardContainer.innerHTML = `<div class="text-center py-4 text-slate-400 text-xs col-span-2">등록된 비정기 기부처가 없습니다. [전체 배송지 관리] 탭에서 등록해 보세요!</div>`;
+                boardContainer.innerHTML = `<div class="text-center py-4 text-slate-400 text-xs col-span-2">등록된 비정기 기부처가 없습니다. [전체 배송지 관리]에서 등록해 보세요!</div>`;
                 return;
             }
 
@@ -495,7 +573,7 @@
                                 </div>
                             </div>
                             <button type="button" onclick="addPlaceToIrregular(${JSON.stringify(place).replace(/"/g, '&quot;')})" class="w-full bg-amber-950 hover:bg-amber-600 hover:text-white text-amber-400 font-bold text-xs py-1.5 rounded border border-amber-700 transition flex items-center justify-center gap-1">
-                                ⭐ 비정기 특별 안내 보드에 상시 띄우기 (돌박사/부림/열정국밥 등)
+                                ⭐ 비정기 특별 안내 보드에 상시 띄우기
                             </button>
                         </div>
                     </div>
