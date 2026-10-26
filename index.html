@@ -13,9 +13,6 @@
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
 
-    <!-- 카카오 내비 SDK 추가 -->
-    <script src="https://t1.kakaocdn.net/kakao_js_sdk/2.7.2/kakao.min.js" crossorigin="anonymous"></script>
-
     <style>
         body { font-family: 'Pretendard', sans-serif; }
         .carousel-container {
@@ -36,7 +33,7 @@
                 <h1 class="text-2xl font-bold flex items-center gap-2">
                     🚚 <span class="text-emerald-400">나주시 기초푸드뱅크</span> 경로안내
                 </h1>
-                <p class="text-slate-400 text-xs mt-1">전직원 실시간 동기화 주간 배송지 & 내비게이션 플래너</p>
+                <p class="text-slate-400 text-xs mt-1">전직원 실시간 동기화 주간 배송지 & 네이버/티맵 플래너</p>
             </div>
             <div id="header-badge" class="bg-emerald-950 text-emerald-400 border border-emerald-700 px-4 py-2 rounded-xl text-xs font-semibold">
                 진행률: 0 / 0건 (0%)
@@ -46,7 +43,7 @@
         <!-- 메인 탭 -->
         <div class="flex gap-2 mb-6 bg-slate-800 p-1.5 rounded-2xl border border-slate-700">
             <button type="button" onclick="switchMainTab('delivery')" id="main-tab-delivery" class="flex-1 py-3 rounded-xl font-bold text-xs sm:text-sm text-center transition bg-emerald-600 text-white shadow-sm">
-                🚛 주간 배송 목록 & 내비
+                🚛 주간 배송 목록 & 길안내
             </button>
             <button type="button" onclick="switchMainTab('calendar')" id="main-tab-calendar" class="flex-1 py-3 rounded-xl font-bold text-xs sm:text-sm text-center transition text-slate-400 hover:text-slate-200">
                 📅 배송 특이사항
@@ -56,7 +53,7 @@
             </button>
         </div>
 
-        <!-- ==================== 1. 주간 배송 & 내비게이션 통합 섹션 ==================== -->
+        <!-- ==================== 1. 주간 배송 통합 섹션 ==================== -->
         <div id="section-delivery" class="flex flex-col gap-5">
             <!-- 요일 선택 탭 -->
             <div class="flex gap-2">
@@ -79,9 +76,7 @@
                 <!-- [왼쪽] 밑반찬통 수량 관리 (숫자 +,-) -->
                 <div class="bg-slate-800 border-2 border-blue-500 p-4 rounded-2xl shadow-lg flex flex-col gap-3">
                     <div class="flex justify-between items-center border-b border-slate-700 pb-2">
-                        <span class="text-xs text-blue-400 font-extrabold tracking-wide uppercase flex items-center gap-1">
-                            🍱 밑반찬통 수량 관리
-                        </span>
+                        <span class="text-xs text-blue-400 font-extrabold tracking-wide uppercase">🍱 밑반찬통 수량 관리</span>
                     </div>
                     
                     <div class="flex gap-2">
@@ -100,9 +95,7 @@
                 <!-- [오른쪽] 기탁서 확인 및 인수 내용 (글자 기록) -->
                 <div class="bg-slate-800 border-2 border-indigo-500 p-4 rounded-2xl shadow-lg flex flex-col gap-3">
                     <div class="flex justify-between items-center border-b border-slate-700 pb-2">
-                        <span class="text-xs text-indigo-400 font-extrabold tracking-wide uppercase flex items-center gap-1">
-                            📄 기탁서 확인 및 인수 내용
-                        </span>
+                        <span class="text-xs text-indigo-400 font-extrabold tracking-wide uppercase">📄 기탁서 확인 및 인수 내용</span>
                     </div>
 
                     <div class="flex gap-2">
@@ -122,9 +115,7 @@
             <!-- 1) 배송 목적지 실시간 좌우 슬라이더 (카러셀) -->
             <div class="bg-slate-800 border-2 border-emerald-500 p-4 rounded-2xl shadow-lg flex flex-col gap-3">
                 <div class="flex justify-between items-center border-b border-slate-700 pb-2">
-                    <span class="text-xs text-emerald-400 font-extrabold tracking-wide uppercase flex items-center gap-1">
-                        📍 배송 순서별 목적지 안내
-                    </span>
+                    <span class="text-xs text-emerald-400 font-extrabold tracking-wide uppercase">📍 배송 순서별 목적지 안내</span>
                     <div class="flex items-center gap-2">
                         <span id="carousel-indicator" class="text-xs text-slate-400 font-bold">0 / 0</span>
                         <div class="flex gap-1">
@@ -142,9 +133,7 @@
             <!-- 2) 비정기/조건부 기부처 특별 안내 보드 -->
             <div class="bg-slate-800 border-2 border-amber-500 p-4 rounded-2xl shadow-lg flex flex-col gap-3">
                 <div class="flex justify-between items-center border-b border-slate-700 pb-2">
-                    <span class="text-xs text-amber-400 font-extrabold tracking-wide uppercase flex items-center gap-1">
-                        ⭐ 비정기 및 조건부 기부처 특별 안내 (돌박사·부림·열정국밥·온시 등)
-                    </span>
+                    <span class="text-xs text-amber-400 font-extrabold tracking-wide uppercase">⭐ 비정기 및 조건부 기부처 특별 안내 (돌박사·부림·열정국밥·온시 등)</span>
                     <span class="text-[11px] text-slate-400">전체 공유됨</span>
                 </div>
                 <div id="irregular-board-container" class="grid grid-cols-1 md:grid-cols-2 gap-3">
@@ -273,8 +262,6 @@
             appId: "1:476867511482:web:8402d210fba4d7fc516e83"
         };
 
-        const REST_API_KEY = "356c03e59b6736b3e04bd07dca7aa77";
-
         firebase.initializeApp(firebaseConfig);
         const db = firebase.database();
 
@@ -292,16 +279,6 @@
         let selectedDateStr = formatDate(today.getFullYear(), today.getMonth() + 1, today.getDate());
 
         window.addEventListener('DOMContentLoaded', () => {
-            if (typeof Kakao !== 'undefined') {
-                try {
-                    if (!Kakao.isInitialized()) {
-                        Kakao.init('356c03e59b6736b3e04bd07dca7aa77');
-                    }
-                } catch (error) {
-                    console.error('Kakao SDK initialization failed:', error);
-                }
-            }
-
             db.ref('delivery_store').on('value', (snapshot) => {
                 store = snapshot.val() || { '월': [], '화': [], '수': [], '목': [], '금': [] };
                 renderDelivery();
@@ -662,9 +639,10 @@
                             <p class="text-xs text-amber-200 mt-0.5 font-medium">📌 규칙: ${item.rule}</p>
                             <p class="text-xs text-slate-400 truncate">📍 ${item.address} | 📞 ${item.phone}</p>
                         </div>
-                        <button type="button" onclick="goNavi('${item.address}', '${item.name}')" class="w-full bg-amber-600 hover:bg-amber-500 text-white font-bold text-xs py-2 rounded-lg transition shadow flex items-center justify-center gap-1">
-                            🚀 카카오내비로 바로 길안내
-                        </button>
+                        <div class="flex gap-1.5 pt-1">
+                            <button type="button" onclick="openNavi('naver', '${item.address}')" class="flex-1 bg-green-600 hover:bg-green-500 text-white font-bold text-xs py-2 rounded-lg transition shadow">네이버 길안내</button>
+                            <button type="button" onclick="openNavi('tmap', '${item.address}')" class="flex-1 bg-red-600 hover:bg-red-500 text-white font-bold text-xs py-2 rounded-lg transition shadow">티맵(TMAP)</button>
+                        </div>
                     </div>
                 `;
             });
@@ -773,25 +751,15 @@
             }
         }
 
-        // --- 모바일 최적화된 카카오내비 앱 다이렉트 연동 함수 ---
-        function goNavi(address, placeName = '') {
-            const isMobile = /Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
-            const name = placeName || address;
-
-            if (!isMobile) {
-                window.open(`https://map.kakao.com/link/search/${encodeURIComponent(address)}`, '_blank');
-                return;
-            }
-
-            if (typeof Kakao !== 'undefined' && Kakao.isInitialized && Kakao.isInitialized() && Kakao.Navi) {
-                Kakao.Navi.start({
-                    name: name,
-                    x: 126.716,
-                    y: 35.016,
-                    coordType: 'wgs84'
-                });
-            } else {
-                window.location.href = `https://m.map.kakao.com/actions/searchView?q=${encodeURIComponent(address)}`;
+        // --- 네이버 및 TMAP 다이렉트 길안내 함수 (오류 없음) ---
+        function openNavi(app, address) {
+            const encoded = encodeURIComponent(address);
+            if (app === 'naver') {
+                // 네이버 지도 통합 검색 및 길찾기 URL (모바일/PC 완벽 호환)
+                window.open(`https://map.naver.com/v5/search/${encoded}`, '_blank');
+            } else if (app === 'tmap') {
+                // TMAP 웹/앱 연동 URL
+                window.open(`https://surl.tmap.co.kr/search?keyword=${encoded}`, '_blank');
             }
         }
 
@@ -835,9 +803,10 @@
                                 <p class="text-xs text-slate-400 truncate mt-0.5">📍 ${item.address}</p>
                                 <p class="text-xs text-slate-400 truncate">📞 ${item.phone} | 📦 ${item.item}</p>
                             </div>
-                            <button type="button" onclick="goNavi('${item.address}', '${item.name}')" class="w-full bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs py-2 rounded-lg transition shadow flex items-center justify-center gap-1">
-                                🚀 카카오내비 길안내
-                            </button>
+                            <div class="flex gap-1.5 pt-1">
+                                <button type="button" onclick="openNavi('naver', '${item.address}')" class="flex-1 bg-green-600 hover:bg-green-500 text-white font-bold py-2 rounded-lg text-xs shadow">네이버 길안내</button>
+                                <button type="button" onclick="openNavi('tmap', '${item.address}')" class="flex-1 bg-red-600 hover:bg-red-500 text-white font-bold py-2 rounded-lg text-xs shadow">티맵(TMAP)</button>
+                            </div>
                         </div>
                     `;
                 });
@@ -879,9 +848,8 @@
                             <input type="text" value="${item.memo || ''}" onchange="updateMemo(${item.id}, this.value)" placeholder="📝 현장 특이사항 메모 (자동저장)" class="w-full px-2.5 py-1 border border-slate-700 rounded-lg text-xs bg-slate-950 text-slate-200 focus:outline-none focus:ring-1 focus:ring-emerald-500">
                         </div>
                         <div class="flex gap-1.5 pt-1">
-                            <button type="button" onclick="goNavi('${item.address}', '${item.name}')" class="flex-1 bg-emerald-600 hover:bg-emerald-500 text-white font-bold py-2 rounded-lg text-xs">🚀 카카오내비 길안내</button>
-                            <button type="button" onclick="window.open('https://surl.tmap.co.kr/search?keyword=' + encodeURIComponent('${item.address}'), '_blank')" class="bg-slate-700 hover:bg-slate-600 text-slate-300 font-bold px-3 py-2 rounded-lg text-xs">TMAP</button>
-                            <button type="button" onclick="window.open('https://map.naver.com/v5/search/' + encodeURIComponent('${item.address}'), '_blank')" class="bg-slate-700 hover:bg-slate-600 text-slate-300 font-bold px-3 py-2 rounded-lg text-xs">네이버</button>
+                            <button type="button" onclick="openNavi('naver', '${item.address}')" class="flex-1 bg-green-600 hover:bg-green-500 text-white font-bold py-2 rounded-lg text-xs shadow">네이버 길안내</button>
+                            <button type="button" onclick="openNavi('tmap', '${item.address}')" class="flex-1 bg-red-600 hover:bg-red-500 text-white font-bold py-2 rounded-lg text-xs shadow">티맵(TMAP)</button>
                         </div>
                     </div>
                 `;
