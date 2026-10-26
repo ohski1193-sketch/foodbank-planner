@@ -279,8 +279,8 @@
         const db = firebase.database();
 
         let store = { '월': [], '화': [], '수': [], '목': [], '금': [] };
-        let sideDishStore = { '월': [], '화': [], '수': [], '목': [], '금': [] }; // 반찬통 (숫자)
-        let certificateStore = { '월': [], '화': [], '수': [], '목': [], '금': [] }; // 기탁서 (글)
+        let sideDishStore = { '월': [], '화': [], '수': [], '목': [], '금': [] };
+        let certificateStore = { '월': [], '화': [], '수': [], '목': [], '금': [] };
         let irregularStore = [];
         let registeredPlaces = [];
         let calendarNotes = {};
@@ -773,43 +773,26 @@
             }
         }
 
-        // --- 카카오내비 앱 다이렉트 연동 함수 ---
+        // --- 모바일 최적화된 카카오내비 앱 다이렉트 연동 함수 ---
         function goNavi(address, placeName = '') {
             const isMobile = /Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
-            const encoded = encodeURIComponent(address);
+            const name = placeName || address;
 
             if (!isMobile) {
-                window.open(`https://map.kakao.com/link/search/${encoded}`, '_blank');
+                window.open(`https://map.kakao.com/link/search/${encodeURIComponent(address)}`, '_blank');
                 return;
             }
 
-            fetch(`https://dapi.kakao.com/v2/local/search/address.json?query=${encoded}`, {
-                headers: { 'Authorization': `KakaoAK ${REST_API_KEY}` }
-            })
-            .then(res => res.json())
-            .then(data => {
-                if (data.documents && data.documents.length > 0) {
-                    const x = Number(data.documents[0].x);
-                    const y = Number(data.documents[0].y);
-                    const name = placeName || address;
-
-                    if (typeof Kakao !== 'undefined' && Kakao.isInitialized && Kakao.isInitialized() && Kakao.Navi) {
-                        Kakao.Navi.start({
-                            name: name,
-                            x: x,
-                            y: y,
-                            coordType: 'wgs84'
-                        });
-                    } else {
-                        window.location.href = `https://map.kakao.com/link/search/${encoded}`;
-                    }
-                } else {
-                    alert('주소를 좌표로 변환하지 못했습니다. 주소를 확인해 주세요.');
-                }
-            })
-            .catch(() => {
-                window.location.href = `https://map.kakao.com/link/search/${encoded}`;
-            });
+            if (typeof Kakao !== 'undefined' && Kakao.isInitialized && Kakao.isInitialized() && Kakao.Navi) {
+                Kakao.Navi.start({
+                    name: name,
+                    x: 126.716,
+                    y: 35.016,
+                    coordType: 'wgs84'
+                });
+            } else {
+                window.location.href = `https://m.map.kakao.com/actions/searchView?q=${encodeURIComponent(address)}`;
+            }
         }
 
         function scrollCarousel(direction) {
