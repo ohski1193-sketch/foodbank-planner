@@ -67,33 +67,50 @@
                 <button type="button" onclick="changeDay('금')" id="tab-금" class="day-btn flex-1 py-3 rounded-xl font-bold text-sm bg-slate-800 text-slate-400 border border-slate-700 shadow-sm">금</button>
             </div>
 
-            <!-- [구분 1] 요일별 밑반찬통 수량 관리 보드 (숫자 중심) -->
+            <!-- [박스 1] 요일별 밑반찬통 수량 관리 (숫자 입력 & 증감 버튼) -->
             <div class="bg-slate-800 border-2 border-blue-500 p-4 rounded-2xl shadow-lg flex flex-col gap-3">
                 <div class="flex justify-between items-center border-b border-slate-700 pb-2">
                     <span class="text-xs text-blue-400 font-extrabold tracking-wide uppercase flex items-center gap-1">
                         🍱 <span id="side-dish-day-title-1">월요일</span> 밑반찬통 수량 관리 (숫자)
                     </span>
-                    <button type="button" onclick="addSideDishItem()" class="bg-blue-600 hover:bg-blue-500 text-white font-bold px-2.5 py-1 rounded-lg text-xs">
-                        + 반찬통 종류 추가
+                    <span class="text-[11px] text-slate-400">실시간 공유</span>
+                </div>
+                
+                <!-- 직접 입력 폼 -->
+                <div class="flex gap-2">
+                    <input type="text" id="input-side-dish-name" placeholder="반찬통 종류 (예: 스텐 반찬통)" class="flex-1 px-3 py-2 bg-slate-900 border border-slate-700 text-slate-200 rounded-xl text-xs focus:outline-none focus:ring-1 focus:ring-blue-500">
+                    <input type="number" id="input-side-dish-count" placeholder="수량" value="1" min="0" class="w-20 px-3 py-2 bg-slate-900 border border-slate-700 text-slate-200 rounded-xl text-xs text-center focus:outline-none focus:ring-1 focus:ring-blue-500">
+                    <button type="button" onclick="handleAddNewSideDish()" class="bg-blue-600 hover:bg-blue-500 text-white font-bold px-4 py-2 rounded-xl text-xs whitespace-nowrap">
+                        + 추가
                     </button>
                 </div>
-                <div id="side-dish-container" class="flex flex-col gap-2">
-                    <div class="text-center py-4 text-slate-400 text-xs">등록된 반찬통 항목이 없습니다. [+ 반찬통 종류 추가]를 눌러 등록하세요!</div>
+
+                <!-- 목록 컨테이너 -->
+                <div id="side-dish-container" class="flex flex-col gap-2 mt-1">
+                    <div class="text-center py-3 text-slate-400 text-xs">등록된 반찬통 항목이 없습니다.</div>
                 </div>
             </div>
 
-            <!-- [구분 2] 요일별 기탁서 확인 보드 (글 중심) -->
+            <!-- [박스 2] 요일별 기탁서 확인 및 인수 내용 (글 입력) -->
             <div class="bg-slate-800 border-2 border-indigo-500 p-4 rounded-2xl shadow-lg flex flex-col gap-3">
                 <div class="flex justify-between items-center border-b border-slate-700 pb-2">
                     <span class="text-xs text-indigo-400 font-extrabold tracking-wide uppercase flex items-center gap-1">
                         📄 <span id="side-dish-day-title-2">월요일</span> 기탁서 확인 및 인수 내용 (글)
                     </span>
-                    <button type="button" onclick="addCertificateItem()" class="bg-indigo-600 hover:bg-indigo-500 text-white font-bold px-2.5 py-1 rounded-lg text-xs">
-                        + 기탁서 항목 추가
+                    <span class="text-[11px] text-slate-400">실시간 공유</span>
+                </div>
+
+                <!-- 직접 입력 폼 -->
+                <div class="flex gap-2">
+                    <input type="text" id="input-certificate-text" placeholder="기탁서 내용 또는 확인 사항을 입력하세요..." class="flex-1 px-3 py-2 bg-slate-900 border border-slate-700 text-slate-200 rounded-xl text-xs focus:outline-none focus:ring-1 focus:ring-indigo-500">
+                    <button type="button" onclick="handleAddNewCertificate()" class="bg-indigo-600 hover:bg-indigo-500 text-white font-bold px-4 py-2 rounded-xl text-xs whitespace-nowrap">
+                        + 추가
                     </button>
                 </div>
-                <div id="certificate-container" class="flex flex-col gap-2">
-                    <div class="text-center py-4 text-slate-400 text-xs">등록된 기탁서 항목이 없습니다. [+ 기탁서 항목 추가]를 눌러 등록하세요!</div>
+
+                <!-- 목록 컨테이너 -->
+                <div id="certificate-container" class="flex flex-col gap-2 mt-1">
+                    <div class="text-center py-3 text-slate-400 text-xs">등록된 기탁서 항목이 없습니다.</div>
                 </div>
             </div>
 
@@ -368,15 +385,21 @@
         function saveCalendarToFirebase() { db.ref('calendar_notes').set(calendarNotes); }
 
         // --- 1. 밑반찬통 수량 관리 (숫자) 로직 ---
-        function addSideDishItem() {
-            const name = prompt(`[${currentDay}요일] 관리할 반찬통 종류명을 입력하세요 (예: 스텐 반찬통):`);
-            if (!name || !name.trim()) return;
-            const countStr = prompt(`수량을 숫자로 입력하세요 (예: 20):`, '10');
-            const count = Number(countStr) || 0;
+        function handleAddNewSideDish() {
+            const nameInput = document.getElementById('input-side-dish-name');
+            const countInput = document.getElementById('input-side-dish-count');
+            const name = nameInput.value.trim();
+            const count = Number(countInput.value) || 0;
+
+            if (!name) {
+                alert('반찬통 종류명을 입력해 주세요!');
+                nameInput.focus();
+                return;
+            }
 
             const item = {
                 id: Date.now(),
-                name: name.trim(),
+                name: name,
                 count: count,
                 checked: false
             };
@@ -384,6 +407,9 @@
             if (!sideDishStore[currentDay]) sideDishStore[currentDay] = [];
             sideDishStore[currentDay].push(item);
             saveSideDishToFirebase();
+
+            nameInput.value = '';
+            countInput.value = '1';
         }
 
         function updateSideDishCount(id, delta) {
@@ -414,7 +440,7 @@
             const list = sideDishStore[currentDay] || [];
 
             if (list.length === 0) {
-                container.innerHTML = `<div class="text-center py-3 text-slate-400 text-xs">📍 ${currentDay}요일에 등록된 반찬통 항목이 없습니다. [+ 반찬통 종류 추가]를 눌러 등록하세요!</div>`;
+                container.innerHTML = `<div class="text-center py-3 text-slate-400 text-xs">📍 ${currentDay}요일에 등록된 반찬통 항목이 없습니다. 위에서 직접 입력하여 추가해 보세요!</div>`;
                 return;
             }
 
@@ -441,19 +467,27 @@
         }
 
         // --- 2. 기탁서 확인 (글) 로직 ---
-        function addCertificateItem() {
-            const desc = prompt(`[${currentDay}요일] 기탁서 내용이나 확인 사항을 글로 입력하세요 (예: 행복복지관 기탁서 번호 12번 지참):`);
-            if (!desc || !desc.trim()) return;
+        function handleAddNewCertificate() {
+            const textInput = document.getElementById('input-certificate-text');
+            const text = textInput.value.trim();
+
+            if (!text) {
+                alert('기탁서 내용을 입력해 주세요!');
+                textInput.focus();
+                return;
+            }
 
             const item = {
                 id: Date.now(),
-                text: desc.trim(),
+                text: text,
                 checked: false
             };
 
             if (!certificateStore[currentDay]) certificateStore[currentDay] = [];
             certificateStore[currentDay].push(item);
             saveCertificateToFirebase();
+
+            textInput.value = '';
         }
 
         function toggleCertificateCheck(id) {
@@ -475,7 +509,7 @@
             const list = certificateStore[currentDay] || [];
 
             if (list.length === 0) {
-                container.innerHTML = `<div class="text-center py-3 text-slate-400 text-xs">📍 ${currentDay}요일에 등록된 기탁서 항목이 없습니다. [+ 기탁서 항목 추가]를 눌러 등록하세요!</div>`;
+                container.innerHTML = `<div class="text-center py-3 text-slate-400 text-xs">📍 ${currentDay}요일에 등록된 기탁서 항목이 없습니다. 위에서 직접 입력하여 추가해 보세요!</div>`;
                 return;
             }
 
