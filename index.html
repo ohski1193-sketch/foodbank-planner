@@ -7,23 +7,16 @@
 
     <!-- Tailwind CSS CDN -->
     <script src="https://cdn.tailwindcss.com"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Pretendard:wght@400;600;700&display=swap" rel="stylesheet">
     
     <!-- Firebase SDK (v9 호환 모듈) -->
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
-    <!-- Firebase Auth SDK -->
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
 
     <style>
-        body { font-family: 'Pretendard', sans-serif; }
-        .carousel-container {
-            scroll-behavior: smooth;
-            scroll-snap-type: x mandatory;
-        }
-        .carousel-item {
-            scroll-snap-align: start;
-        }
+        body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Noto Sans KR", sans-serif; }
+        .carousel-container { scroll-behavior: smooth; scroll-snap-type: x mandatory; }
+        .carousel-item { scroll-snap-align: start; }
     </style>
 </head>
 <body class="bg-slate-900 min-h-screen text-slate-100 pb-12">
@@ -42,7 +35,7 @@
             </div>
         </header>
 
-        <!-- 메인 탭 네비게이션: 1. 밑반찬통&기탁서 / 2. 배송 경로 / 3. 배송 특이사항 / 4. 전체 배송지 관리 -->
+        <!-- 메인 탭 네비게이션 -->
         <div class="grid grid-cols-2 sm:grid-cols-4 gap-2 mb-6 bg-slate-800 p-1.5 rounded-2xl border border-slate-700">
             <button type="button" onclick="switchMainTab('sidedish')" id="main-tab-sidedish" class="py-3 rounded-xl font-bold text-xs sm:text-sm text-center transition bg-emerald-600 text-white shadow-sm">
                 🍱 밑반찬통 & 기탁서
@@ -58,9 +51,8 @@
             </button>
         </div>
 
-        <!-- ==================== [탭 1] 밑반찬통 & 기탁서 전용 첫 페이지 ==================== -->
+        <!-- [탭 1] 밑반찬통 & 기탁서 전용 첫 페이지 -->
         <div id="section-sidedish" class="flex flex-col gap-5">
-            <!-- 요일 선택 탭 -->
             <div class="flex gap-2">
                 <button type="button" onclick="changeDay('월')" class="day-btn-sidedish flex-1 py-3 rounded-xl font-bold text-sm bg-slate-800 text-slate-400 border border-slate-700 shadow-sm" id="tab-sidedish-월">월</button>
                 <button type="button" onclick="changeDay('화')" class="day-btn-sidedish flex-1 py-3 rounded-xl font-bold text-sm bg-slate-800 text-slate-400 border border-slate-700 shadow-sm" id="tab-sidedish-화">화</button>
@@ -69,36 +61,25 @@
                 <button type="button" onclick="changeDay('금')" class="day-btn-sidedish flex-1 py-3 rounded-xl font-bold text-sm bg-slate-800 text-slate-400 border border-slate-700 shadow-sm" id="tab-sidedish-금">금</button>
             </div>
 
-            <!-- 요일 타이틀 배너 -->
             <div class="bg-slate-800 border border-slate-700 px-4 py-2.5 rounded-xl flex justify-between items-center text-xs">
                 <span class="font-bold text-emerald-400">📅 현재 요일: <span id="current-day-banner-sidedish" class="text-white text-sm font-extrabold">월요일</span></span>
-                <span class="text-slate-400">보안 인증 연결됨</span>
+                <span class="text-slate-400">실시간 동기화 중</span>
             </div>
 
-            <!-- 밑반찬통 & 기탁서 좌우 2분할 카드 -->
             <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
-                
-                <!-- [왼쪽] 밑반찬통 수량 및 완료 체크 -->
+                <!-- 밑반찬통 -->
                 <div class="bg-slate-800 border border-slate-700 p-6 rounded-2xl shadow-lg flex flex-col justify-between items-center min-h-[300px]">
                     <div class="w-full text-center pb-3 border-b border-slate-700">
                         <h3 class="text-xl font-bold text-slate-100 tracking-wider">밑반찬통</h3>
                         <p class="text-xs text-slate-400 mt-0.5">금일 수령 반찬통 수량</p>
                     </div>
 
-                    <!-- 숫자 증감 영역 -->
                     <div class="flex items-center justify-center gap-7 my-auto py-4">
-                        <button type="button" onclick="updateSideDishCount(-1)" class="w-14 h-14 rounded-2xl bg-slate-700 hover:bg-slate-600 active:scale-95 text-slate-200 text-3xl font-bold flex items-center justify-center transition select-none shadow">
-                            －
-                        </button>
-                        <span id="side-dish-count-display" class="text-6xl font-black text-emerald-400 tracking-tight min-w-[3ch] text-center select-none">
-                            0
-                        </span>
-                        <button type="button" onclick="updateSideDishCount(1)" class="w-14 h-14 rounded-2xl bg-slate-700 hover:bg-slate-600 active:scale-95 text-slate-200 text-3xl font-bold flex items-center justify-center transition select-none shadow">
-                            ＋
-                        </button>
+                        <button type="button" onclick="updateSideDishCount(-1)" class="w-14 h-14 rounded-2xl bg-slate-700 hover:bg-slate-600 active:scale-95 text-slate-200 text-3xl font-bold flex items-center justify-center transition select-none shadow">－</button>
+                        <span id="side-dish-count-display" class="text-6xl font-black text-emerald-400 tracking-tight min-w-[3ch] text-center select-none">0</span>
+                        <button type="button" onclick="updateSideDishCount(1)" class="w-14 h-14 rounded-2xl bg-slate-700 hover:bg-slate-600 active:scale-95 text-slate-200 text-3xl font-bold flex items-center justify-center transition select-none shadow">＋</button>
                     </div>
 
-                    <!-- 수령 완료 체크박스 -->
                     <div class="flex items-center gap-2 pt-3 border-t border-slate-700/60 w-full justify-center">
                         <label class="flex items-center gap-2.5 cursor-pointer select-none group">
                             <input type="checkbox" id="side-dish-done-chk" onchange="toggleSideDishDone()" class="w-7 h-7 rounded-lg bg-slate-900 border-2 border-slate-600 text-emerald-500 focus:ring-0 focus:ring-offset-0 cursor-pointer transition">
@@ -107,33 +88,27 @@
                     </div>
                 </div>
 
-                <!-- [오른쪽] 기탁서 체크리스트 & 신규 입력 -->
+                <!-- 기탁서 -->
                 <div class="bg-slate-800 border border-slate-700 p-6 rounded-2xl shadow-lg flex flex-col justify-between min-h-[300px]">
                     <div class="w-full text-center pb-3 border-b border-slate-700">
                         <h3 class="text-xl font-bold text-slate-100 tracking-wider">기탁서</h3>
                         <p class="text-xs text-slate-400 mt-0.5">인수 및 확인 기탁처</p>
                     </div>
 
-                    <!-- 기탁서 리스트 목록 -->
                     <div id="certificate-list-container" class="flex flex-col gap-2.5 my-3 max-h-[190px] overflow-y-auto pr-1">
                         <div class="text-center py-8 text-slate-500 text-xs">등록된 기탁서 항목이 없습니다.</div>
                     </div>
 
-                    <!-- 기탁서 입력 폼 -->
                     <form onsubmit="handleAddNewCertificate(event)" class="flex gap-2 pt-3 border-t border-slate-700/60 mt-auto">
                         <input type="text" id="input-certificate-text" placeholder="기탁서를 입력하세요" class="flex-1 px-3.5 py-2.5 bg-slate-900 border border-slate-700 text-slate-200 placeholder-slate-500 rounded-xl text-xs focus:outline-none focus:border-emerald-500">
-                        <button type="submit" class="bg-emerald-600 hover:bg-emerald-500 text-white font-bold px-5 py-2.5 rounded-xl text-xs whitespace-nowrap transition active:scale-95 shadow">
-                            입력
-                        </button>
+                        <button type="submit" class="bg-emerald-600 hover:bg-emerald-500 text-white font-bold px-5 py-2.5 rounded-xl text-xs whitespace-nowrap transition active:scale-95 shadow">입력</button>
                     </form>
                 </div>
-
             </div>
         </div>
 
-        <!-- ==================== [탭 2] 배송 경로 & 길안내 ==================== -->
+        <!-- [탭 2] 배송 경로 & 길안내 -->
         <div id="section-delivery" class="hidden flex-col gap-5">
-            <!-- 요일 선택 탭 -->
             <div class="flex gap-2">
                 <button type="button" onclick="changeDay('월')" class="day-btn-delivery flex-1 py-3 rounded-xl font-bold text-sm bg-slate-800 text-slate-400 border border-slate-700 shadow-sm" id="tab-delivery-월">월</button>
                 <button type="button" onclick="changeDay('화')" class="day-btn-delivery flex-1 py-3 rounded-xl font-bold text-sm bg-slate-800 text-slate-400 border border-slate-700 shadow-sm" id="tab-delivery-화">화</button>
@@ -142,13 +117,11 @@
                 <button type="button" onclick="changeDay('금')" class="day-btn-delivery flex-1 py-3 rounded-xl font-bold text-sm bg-slate-800 text-slate-400 border border-slate-700 shadow-sm" id="tab-delivery-금">금</button>
             </div>
 
-            <!-- 요일 타이틀 배너 -->
             <div class="bg-slate-800 border border-slate-700 px-4 py-2.5 rounded-xl flex justify-between items-center text-xs">
                 <span class="font-bold text-emerald-400">📅 선택 요일: <span id="current-day-banner-delivery" class="text-white text-sm font-extrabold">월요일</span></span>
                 <span class="text-slate-400">네이버 지도 다이렉트 연동</span>
             </div>
 
-            <!-- 1) 배송 목적지 실시간 좌우 슬라이더 (카러셀) -->
             <div class="bg-slate-800 border-2 border-emerald-500 p-4 rounded-2xl shadow-lg flex flex-col gap-3">
                 <div class="flex justify-between items-center border-b border-slate-700 pb-2">
                     <span class="text-xs text-emerald-400 font-extrabold tracking-wide uppercase">📍 배송 순서별 목적지 안내</span>
@@ -160,13 +133,11 @@
                         </div>
                     </div>
                 </div>
-
                 <div id="carousel-container" class="carousel-container flex overflow-x-auto gap-4 py-1 no-scrollbar">
                     <div class="text-center py-6 text-slate-400 text-xs w-full">배송지를 불러오는 중입니다...</div>
                 </div>
             </div>
 
-            <!-- 2) 비정기/조건부 기부처 특별 안내 보드 -->
             <div class="bg-slate-800 border-2 border-amber-500 p-4 rounded-2xl shadow-lg flex flex-col gap-3">
                 <div class="flex justify-between items-center border-b border-slate-700 pb-2">
                     <span class="text-xs text-amber-400 font-extrabold tracking-wide uppercase">⭐ 비정기 및 조건부 기부처 특별 안내 (돌박사·부림·열정국밥·온시 등)</span>
@@ -177,7 +148,6 @@
                 </div>
             </div>
 
-            <!-- 3) 요일별 상세 배송 목록 -->
             <div class="bg-slate-800 p-5 rounded-2xl shadow-lg border border-slate-700">
                 <div class="flex justify-between items-center border-b border-slate-700 pb-2 mb-4">
                     <h2 class="text-base font-bold text-white">
@@ -188,17 +158,13 @@
                 <div id="list-container" class="flex flex-col gap-3 max-h-[500px] overflow-y-auto pr-1"></div>
 
                 <div class="border-t border-slate-700 pt-3 mt-4 flex gap-2">
-                    <button type="button" onclick="handleReset()" class="flex-1 bg-blue-600 hover:bg-blue-500 text-white font-bold py-2 rounded-xl text-xs transition">
-                        🔄 오늘 일정 완료 (배송대기로 초기화)
-                    </button>
-                    <button type="button" onclick="handleDeleteAll()" class="flex-1 bg-slate-700 hover:bg-slate-600 text-slate-300 font-medium py-2 rounded-xl text-xs transition">
-                        이 요일 배송지 전체 삭제
-                    </button>
+                    <button type="button" onclick="handleReset()" class="flex-1 bg-blue-600 hover:bg-blue-500 text-white font-bold py-2 rounded-xl text-xs transition">🔄 오늘 일정 완료 (배송대기로 초기화)</button>
+                    <button type="button" onclick="handleDeleteAll()" class="flex-1 bg-slate-700 hover:bg-slate-600 text-slate-300 font-medium py-2 rounded-xl text-xs transition">이 요일 배송지 전체 삭제</button>
                 </div>
             </div>
         </div>
 
-        <!-- ==================== [탭 3] 배송 특이사항 (캘린더) ==================== -->
+        <!-- [탭 3] 배송 특이사항 (캘린더) -->
         <div id="section-calendar" class="hidden flex-col gap-5">
             <div class="grid grid-cols-1 md:grid-cols-3 gap-5">
                 <div class="bg-slate-800 p-5 rounded-2xl shadow-lg border border-slate-700">
@@ -220,9 +186,7 @@
                         </h3>
                         <textarea id="calendar-note-input" rows="3" placeholder="해당 날짜의 주요 특이사항, 배송지 이슈 등을 자유롭게 기록하세요..." class="w-full p-3 bg-slate-900 border border-slate-700 text-slate-200 rounded-xl text-xs focus:outline-none focus:ring-2 focus:ring-emerald-500"></textarea>
                         <div class="flex gap-2 justify-end">
-                            <button type="button" onclick="saveCalendarNote()" class="bg-emerald-600 hover:bg-emerald-500 text-white font-bold px-4 py-2 rounded-xl text-xs">
-                                특이사항 실시간 저장
-                            </button>
+                            <button type="button" onclick="saveCalendarNote()" class="bg-emerald-600 hover:bg-emerald-500 text-white font-bold px-4 py-2 rounded-xl text-xs">특이사항 실시간 저장</button>
                         </div>
                     </div>
 
@@ -234,13 +198,10 @@
             </div>
         </div>
 
-        <!-- ==================== [탭 4] 전체 배송지 관리 ==================== -->
+        <!-- [탭 4] 전체 배송지 관리 -->
         <div id="section-places" class="hidden flex-col gap-5">
             <div class="bg-slate-800 p-5 rounded-2xl shadow-lg border border-slate-700 flex flex-col gap-3">
-                <h2 id="form-title" class="text-base font-bold text-white border-b border-slate-700 pb-2">
-                    ➕ 배송지 신규 등록
-                </h2>
-
+                <h2 id="form-title" class="text-base font-bold text-white border-b border-slate-700 pb-2">➕ 배송지 신규 등록</h2>
                 <input type="hidden" id="edit-place-id" value="">
 
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
@@ -263,20 +224,14 @@
                 </div>
 
                 <div class="flex gap-2 mt-2">
-                    <button type="button" id="btn-save-place" onclick="handleSavePlace()" class="w-full bg-emerald-600 hover:bg-emerald-500 text-white font-bold py-2.5 px-4 rounded-xl text-sm transition shadow-sm">
-                        + 전체 배송지 목록에 등록하기
-                    </button>
-                    <button type="button" id="btn-cancel-edit" onclick="cancelEditMode()" class="bg-slate-700 hover:bg-slate-600 text-slate-200 font-bold py-2.5 px-4 rounded-xl text-sm transition hidden">
-                        취소
-                    </button>
+                    <button type="button" id="btn-save-place" onclick="handleSavePlace()" class="w-full bg-emerald-600 hover:bg-emerald-500 text-white font-bold py-2.5 px-4 rounded-xl text-sm transition shadow-sm">+ 전체 배송지 목록에 등록하기</button>
+                    <button type="button" id="btn-cancel-edit" onclick="cancelEditMode()" class="bg-slate-700 hover:bg-slate-600 text-slate-200 font-bold py-2.5 px-4 rounded-xl text-sm transition hidden">취소</button>
                 </div>
             </div>
 
             <div class="bg-slate-800 p-5 rounded-2xl shadow-lg border border-slate-700 flex flex-col gap-3">
                 <div class="flex justify-between items-center border-b border-slate-700 pb-2">
-                    <h2 class="text-base font-bold text-white">
-                        ⭐ 등록된 배송지 목록 (<span id="total-places-count">0</span>곳)
-                    </h2>
+                    <h2 class="text-base font-bold text-white">⭐ 등록된 배송지 목록 (<span id="total-places-count">0</span>곳)</h2>
                     <span class="text-xs text-slate-400">요일 버튼을 누르거나 비정기 보드에 추가하세요</span>
                 </div>
                 <div id="registered-places-container" class="grid grid-cols-1 md:grid-cols-2 gap-3 max-h-[500px] overflow-y-auto pr-1"></div>
@@ -300,8 +255,7 @@
         const auth = firebase.auth();
         const db = firebase.database();
 
-        // 내부 인증용 PIN 비밀번호 (필요에 따라 변경 가능)
-        const APP_PASSWORD = "7727";
+        const APP_PASSWORD = "1234";
 
         let store = { '월': [], '화': [], '수': [], '목': [], '금': [] };
         let sideDishSummary = {
@@ -317,15 +271,13 @@
         let calendarNotes = {};
         let currentDay = '월';
 
-        let today = new Date();
+        const today = new Date();
         let calYear = today.getFullYear();
         let calMonth = today.getMonth();
         let selectedDateStr = formatDate(today.getFullYear(), today.getMonth() + 1, today.getDate());
 
-        // 내부 비밀번호 검증 및 Firebase 익명 로그인
         function checkAccessAuth() {
             let savedPass = localStorage.getItem('foodbank_auth_pass');
-            
             if (savedPass !== APP_PASSWORD) {
                 savedPass = prompt("나주시 기초푸드뱅크 내부 인증 비밀번호를 입력하세요:");
                 if (savedPass === APP_PASSWORD) {
@@ -336,56 +288,47 @@
                         <div class="flex flex-col items-center justify-center min-h-screen text-center p-6">
                             <h2 class="text-2xl font-bold text-rose-500 mb-2">접근 권한이 없습니다</h2>
                             <p class="text-slate-400 text-sm mb-4">올바른 비밀번호를 입력해야 시스템을 이용할 수 있습니다.</p>
-                            <button onclick="location.reload()" class="bg-slate-800 border border-slate-700 px-4 py-2 rounded-xl text-xs font-bold text-white hover:bg-slate-700">다시 시도</button>
+                            <button onclick="location.reload()" class="bg-slate-800 border border-slate-700 px-4 py-2 rounded-xl text-xs font-bold text-white">다시 시도</button>
                         </div>
                     `;
                     return false;
                 }
             }
-
-            // Firebase 익명 인증 수행
-            auth.signInAnonymously().catch((error) => {
-                console.error("Firebase 보안 인증 실패:", error);
-            });
-
+            auth.signInAnonymously().catch(e => console.error(e));
             return true;
         }
 
         window.addEventListener('DOMContentLoaded', () => {
-            // 인증 검사 수행 (실패 시 데이터 연동 중단)
             if (!checkAccessAuth()) return;
 
-            db.ref('delivery_store').on('value', (snapshot) => {
-                store = snapshot.val() || { '월': [], '화': [], '수': [], '목': [], '금': [] };
+            db.ref('delivery_store').on('value', snap => {
+                store = snap.val() || { '월': [], '화': [], '수': [], '목': [], '금': [] };
                 renderDelivery();
             });
 
-            db.ref('side_dish_summary').on('value', (snapshot) => {
-                const val = snapshot.val();
-                if (val) {
-                    sideDishSummary = Object.assign(sideDishSummary, val);
-                }
+            db.ref('side_dish_summary').on('value', snap => {
+                const val = snap.val();
+                if (val) Object.assign(sideDishSummary, val);
                 renderSideDishWidget();
             });
 
-            db.ref('certificate_store').on('value', (snapshot) => {
-                certificateStore = snapshot.val() || { '월': [], '화': [], '수': [], '목': [], '금': [] };
+            db.ref('certificate_store').on('value', snap => {
+                certificateStore = snap.val() || { '월': [], '화': [], '수': [], '목': [], '금': [] };
                 renderCertificateBoard();
             });
 
-            db.ref('irregular_store').on('value', (snapshot) => {
-                irregularStore = snapshot.val() || [];
+            db.ref('irregular_store').on('value', snap => {
+                irregularStore = snap.val() || [];
                 renderIrregularBoard();
+            });
+
+            db.ref('registered_places').on('value', snap => {
+                registeredPlaces = snap.val() || [];
                 renderRegisteredPlaces();
             });
 
-            db.ref('registered_places').on('value', (snapshot) => {
-                registeredPlaces = snapshot.val() || [];
-                renderRegisteredPlaces();
-            });
-
-            db.ref('calendar_notes').on('value', (snapshot) => {
-                calendarNotes = snapshot.val() || {};
+            db.ref('calendar_notes').on('value', snap => {
+                calendarNotes = snap.val() || {};
                 renderCalendar();
                 selectCalendarDate(selectedDateStr);
             });
@@ -393,50 +336,23 @@
             changeDay('월');
         });
 
-        // 탭 전환 함수
         function switchMainTab(tab) {
-            const sideSec = document.getElementById('section-sidedish');
-            const delSec = document.getElementById('section-delivery');
-            const calSec = document.getElementById('section-calendar');
-            const plcSec = document.getElementById('section-places');
-
-            const sideBtn = document.getElementById('main-tab-sidedish');
-            const delBtn = document.getElementById('main-tab-delivery');
-            const calBtn = document.getElementById('main-tab-calendar');
-            const plcBtn = document.getElementById('main-tab-places');
-
-            sideSec.classList.add('hidden');
-            delSec.classList.add('hidden');
-            calSec.classList.add('hidden');
-            plcSec.classList.add('hidden');
-
-            const defaultBtnClass = "py-3 rounded-xl font-bold text-xs sm:text-sm text-center transition text-slate-400 hover:text-slate-200";
-            const activeBtnClass = "py-3 rounded-xl font-bold text-xs sm:text-sm text-center transition bg-emerald-600 text-white shadow-sm";
-
-            sideBtn.className = defaultBtnClass;
-            delBtn.className = defaultBtnClass;
-            calBtn.className = defaultBtnClass;
-            plcBtn.className = defaultBtnClass;
-
-            if (tab === 'sidedish') {
-                sideSec.classList.remove('hidden');
-                sideBtn.className = activeBtnClass;
-            } else if (tab === 'delivery') {
-                delSec.classList.remove('hidden');
-                delBtn.className = activeBtnClass;
-            } else if (tab === 'calendar') {
-                calSec.classList.remove('hidden');
-                calBtn.className = activeBtnClass;
-            } else if (tab === 'places') {
-                plcSec.classList.remove('hidden');
-                plcBtn.className = activeBtnClass;
-            }
+            const tabs = ['sidedish', 'delivery', 'calendar', 'places'];
+            tabs.forEach(t => {
+                const sec = document.getElementById(`section-${t}`);
+                const btn = document.getElementById(`main-tab-${t}`);
+                if (t === tab) {
+                    sec.classList.remove('hidden');
+                    btn.className = "py-3 rounded-xl font-bold text-xs sm:text-sm text-center transition bg-emerald-600 text-white shadow-sm";
+                } else {
+                    sec.classList.add('hidden');
+                    btn.className = "py-3 rounded-xl font-bold text-xs sm:text-sm text-center transition text-slate-400 hover:text-slate-200";
+                }
+            });
         }
 
-        // 요일 변경 (첫 탭과 둘째 탭 버튼 동시 갱신)
         function changeDay(day) {
             currentDay = day;
-
             ['sidedish', 'delivery'].forEach(prefix => {
                 document.querySelectorAll(`.day-btn-${prefix}`).forEach(btn => {
                     btn.className = `day-btn-${prefix} flex-1 py-3 rounded-xl font-bold text-sm bg-slate-800 text-slate-400 border border-slate-700 shadow-sm`;
@@ -454,57 +370,35 @@
             renderDelivery();
         }
 
-        function saveStoreToFirebase() { db.ref('delivery_store').set(store); }
-        function saveSideDishSummaryToFirebase() { db.ref('side_dish_summary').set(sideDishSummary); }
-        function saveCertificateToFirebase() { db.ref('certificate_store').set(certificateStore); }
-        function saveIrregularToFirebase() { db.ref('irregular_store').set(irregularStore); }
-        function saveRegisteredPlacesToFirebase() { db.ref('registered_places').set(registeredPlaces); }
-        function saveCalendarToFirebase() { db.ref('calendar_notes').set(calendarNotes); }
-
-        // --- 밑반찬통 수량 & 완료 체크 로직 ---
         function renderSideDishWidget() {
-            if (!sideDishSummary[currentDay]) {
-                sideDishSummary[currentDay] = { count: 8, done: false };
-            }
+            if (!sideDishSummary[currentDay]) sideDishSummary[currentDay] = { count: 8, done: false };
             const data = sideDishSummary[currentDay];
             document.getElementById('side-dish-count-display').textContent = data.count || 0;
             document.getElementById('side-dish-done-chk').checked = !!data.done;
         }
 
         function updateSideDishCount(delta) {
-            if (!sideDishSummary[currentDay]) {
-                sideDishSummary[currentDay] = { count: 8, done: false };
-            }
-            const current = sideDishSummary[currentDay].count || 0;
-            sideDishSummary[currentDay].count = Math.max(0, current + delta);
-            saveSideDishSummaryToFirebase();
+            if (!sideDishSummary[currentDay]) sideDishSummary[currentDay] = { count: 8, done: false };
+            sideDishSummary[currentDay].count = Math.max(0, (sideDishSummary[currentDay].count || 0) + delta);
+            db.ref('side_dish_summary').set(sideDishSummary);
             renderSideDishWidget();
         }
 
         function toggleSideDishDone() {
-            if (!sideDishSummary[currentDay]) {
-                sideDishSummary[currentDay] = { count: 8, done: false };
-            }
+            if (!sideDishSummary[currentDay]) sideDishSummary[currentDay] = { count: 8, done: false };
             sideDishSummary[currentDay].done = document.getElementById('side-dish-done-chk').checked;
-            saveSideDishSummaryToFirebase();
+            db.ref('side_dish_summary').set(sideDishSummary);
         }
 
-        // --- 기탁서 리스트 로직 ---
         function handleAddNewCertificate(e) {
             e.preventDefault();
             const input = document.getElementById('input-certificate-text');
             const text = input.value.trim();
             if (!text) return;
 
-            if (!certificateStore[currentDay]) {
-                certificateStore[currentDay] = [];
-            }
-            certificateStore[currentDay].push({
-                id: Date.now(),
-                text: text,
-                done: false
-            });
-            saveCertificateToFirebase();
+            if (!certificateStore[currentDay]) certificateStore[currentDay] = [];
+            certificateStore[currentDay].push({ id: Date.now(), text, done: false });
+            db.ref('certificate_store').set(certificateStore);
             input.value = '';
             renderCertificateBoard();
         }
@@ -514,93 +408,65 @@
             const target = list.find(x => x.id === id);
             if (target) {
                 target.done = !target.done;
-                saveCertificateToFirebase();
+                db.ref('certificate_store').set(certificateStore);
                 renderCertificateBoard();
             }
         }
 
         function deleteCertificateItem(id) {
             certificateStore[currentDay] = (certificateStore[currentDay] || []).filter(x => x.id !== id);
-            saveCertificateToFirebase();
+            db.ref('certificate_store').set(certificateStore);
             renderCertificateBoard();
         }
 
         function renderCertificateBoard() {
             const container = document.getElementById('certificate-list-container');
             const list = certificateStore[currentDay] || [];
-
             if (list.length === 0) {
                 container.innerHTML = `<div class="text-center py-8 text-slate-500 text-xs">등록된 기탁서 항목이 없습니다.</div>`;
                 return;
             }
-
-            let html = '';
-            list.forEach(item => {
-                html += `
-                    <div class="flex items-center justify-between p-2.5 rounded-xl bg-slate-900 border border-slate-700/60 group">
-                        <label class="flex items-center gap-3 overflow-hidden cursor-pointer select-none">
-                            <input type="checkbox" ${item.done ? 'checked' : ''} onchange="toggleCertificateItem(${item.id})" class="w-5 h-5 rounded-md bg-slate-800 border-2 border-slate-600 text-emerald-500 focus:ring-0 focus:ring-offset-0 cursor-pointer transition">
-                            <span class="text-sm font-semibold truncate ${item.done ? 'line-through text-slate-500' : 'text-slate-100'}">${item.text}</span>
-                        </label>
-                        <button type="button" onclick="deleteCertificateItem(${item.id})" class="text-slate-500 hover:text-rose-400 text-xs font-bold px-2 py-1 transition">
-                            ✕
-                        </button>
-                    </div>
-                `;
-            });
-            container.innerHTML = html;
+            container.innerHTML = list.map(item => `
+                <div class="flex items-center justify-between p-2.5 rounded-xl bg-slate-900 border border-slate-700/60">
+                    <label class="flex items-center gap-3 overflow-hidden cursor-pointer select-none">
+                        <input type="checkbox" ${item.done ? 'checked' : ''} onchange="toggleCertificateItem(${item.id})" class="w-5 h-5 rounded-md bg-slate-800 border-2 border-slate-600 text-emerald-500 focus:ring-0 cursor-pointer">
+                        <span class="text-sm font-semibold truncate ${item.done ? 'line-through text-slate-500' : 'text-slate-100'}">${item.text}</span>
+                    </label>
+                    <button type="button" onclick="deleteCertificateItem(${item.id})" class="text-slate-500 hover:text-rose-400 text-xs font-bold px-2 py-1">✕</button>
+                </div>
+            `).join('');
         }
 
         function handleSavePlace() {
             const editId = document.getElementById('edit-place-id').value;
             const name = document.getElementById('input-name').value.trim();
             const address = document.getElementById('input-address').value.trim();
-            const phone = document.getElementById('input-phone').value.trim();
-            const item = document.getElementById('input-item').value.trim();
+            const phone = document.getElementById('input-phone').value.trim() || '연락처 없음';
+            const item = document.getElementById('input-item').value.trim() || '기본 물량';
 
-            if (!name || !address) { alert('배송처명과 주소는 필수 입력 항목입니다!'); return; }
+            if (!name || !address) { alert('배송처명과 주소는 필수입니다!'); return; }
 
             if (editId) {
                 const idx = registeredPlaces.findIndex(x => x.id == editId);
-                if (idx !== -1) {
-                    registeredPlaces[idx].name = name;
-                    registeredPlaces[idx].address = address;
-                    registeredPlaces[idx].phone = phone || '연락처 없음';
-                    registeredPlaces[idx].item = item || '기본 물량';
-                    saveRegisteredPlacesToFirebase();
-                    alert(`'${name}' 정보가 수정되었습니다!`);
-                }
+                if (idx !== -1) registeredPlaces[idx] = { id: Number(editId), name, address, phone, item };
             } else {
-                const newPlace = {
-                    id: Date.now(),
-                    name: name,
-                    address: address,
-                    phone: phone || '연락처 없음',
-                    item: item || '기본 물량'
-                };
-                registeredPlaces.push(newPlace);
-                saveRegisteredPlacesToFirebase();
-                alert(`'${name}' 배송지가 등록되었습니다!`);
+                registeredPlaces.push({ id: Date.now(), name, address, phone, item });
             }
-
+            db.ref('registered_places').set(registeredPlaces);
             cancelEditMode();
         }
 
         function startEditPlace(id) {
             const target = registeredPlaces.find(x => x.id == id);
             if (!target) return;
-
             document.getElementById('edit-place-id').value = target.id;
             document.getElementById('input-name').value = target.name;
             document.getElementById('input-address').value = target.address;
             document.getElementById('input-phone').value = target.phone === '연락처 없음' ? '' : target.phone;
             document.getElementById('input-item').value = target.item === '기본 물량' ? '' : target.item;
-
             document.getElementById('form-title').textContent = `✏️ 배송지 정보 수정 (${target.name})`;
             document.getElementById('btn-save-place').textContent = `💾 배송지 정보 수정 완료`;
-            document.getElementById('btn-save-place').className = `w-full bg-blue-600 hover:bg-blue-500 text-white font-bold py-2.5 px-4 rounded-xl text-sm transition shadow-sm`;
             document.getElementById('btn-cancel-edit').classList.remove('hidden');
-
             window.scrollTo({ top: 0, behavior: 'smooth' });
         }
 
@@ -610,129 +476,97 @@
             document.getElementById('input-address').value = '';
             document.getElementById('input-phone').value = '';
             document.getElementById('input-item').value = '';
-
             document.getElementById('form-title').textContent = `➕ 배송지 신규 등록`;
             document.getElementById('btn-save-place').textContent = `+ 전체 배송지 목록에 등록하기`;
-            document.getElementById('btn-save-place').className = `w-full bg-emerald-600 hover:bg-emerald-500 text-white font-bold py-2.5 px-4 rounded-xl text-sm transition shadow-sm`;
             document.getElementById('btn-cancel-edit').classList.add('hidden');
         }
 
         function addPlaceToDay(place, day) {
-            const itemData = {
-                id: Date.now(),
-                name: place.name,
-                address: place.address,
-                phone: place.phone,
-                item: place.item,
-                memo: '',
-                done: false
-            };
-
             if (!store[day]) store[day] = [];
-            store[day].push(itemData);
-            saveStoreToFirebase();
-            alert(`'${place.name}' 배송지가 ${day}요일 동선에 배정되었습니다!`);
+            store[day].push({ id: Date.now(), name: place.name, address: place.address, phone: place.phone, item: place.item, memo: '', done: false });
+            db.ref('delivery_store').set(store);
+            alert(`'${place.name}' 배송지가 ${day}요일 동선에 배정되었습니다.`);
         }
 
         function addPlaceToIrregular(place) {
-            const itemData = {
-                id: Date.now(),
-                name: place.name,
-                address: place.address,
-                phone: place.phone,
-                rule: place.item || '비정기 방문 조건'
-            };
-            irregularStore.push(itemData);
-            saveIrregularToFirebase();
-            alert(`'${place.name}' 기부처가 상단 [비정기 특별 안내 보드]에 추가되었습니다!`);
+            irregularStore.push({ id: Date.now(), name: place.name, address: place.address, phone: place.phone, rule: place.item });
+            db.ref('irregular_store').set(irregularStore);
+            alert(`'${place.name}' 기부처가 비정기 보드에 추가되었습니다.`);
         }
 
         function deleteIrregularItem(id) {
-            if (confirm('이 비정기 기부처를 특별 안내 보드에서 삭제하시겠습니까?')) {
+            if (confirm('삭제하시겠습니까?')) {
                 irregularStore = irregularStore.filter(x => x.id !== id);
-                saveIrregularToFirebase();
+                db.ref('irregular_store').set(irregularStore);
             }
         }
 
         function deleteRegisteredPlace(id) {
-            if (confirm('이 배송지를 저장소 모음에서 완전히 삭제하시겠습니까?')) {
+            if (confirm('완전히 삭제하시겠습니까?')) {
                 registeredPlaces = registeredPlaces.filter(x => x.id !== id);
-                saveRegisteredPlacesToFirebase();
+                db.ref('registered_places').set(registeredPlaces);
             }
         }
 
         function renderIrregularBoard() {
-            const boardContainer = document.getElementById('irregular-board-container');
+            const container = document.getElementById('irregular-board-container');
             if (irregularStore.length === 0) {
-                boardContainer.innerHTML = `<div class="text-center py-4 text-slate-400 text-xs col-span-2">등록된 비정기 기부처가 없습니다. [전체 배송지 관리]에서 등록해 보세요!</div>`;
+                container.innerHTML = `<div class="text-center py-4 text-slate-400 text-xs col-span-2">등록된 비정기 기부처가 없습니다.</div>`;
                 return;
             }
-
-            let html = '';
-            irregularStore.forEach((item) => {
-                html += `
-                    <div class="p-3 bg-slate-900 border border-amber-600 rounded-xl flex flex-col justify-between gap-2 shadow-sm">
-                        <div>
-                            <div class="flex justify-between items-center mb-1">
-                                <span class="text-[11px] font-extrabold text-amber-400">⭐ 비정기/조건부</span>
-                                <button type="button" onclick="deleteIrregularItem(${item.id})" class="text-[11px] text-rose-400 hover:text-rose-300 font-bold px-1">✕ 삭제</button>
-                            </div>
-                            <h3 class="text-sm font-bold text-white truncate">${item.name}</h3>
-                            <p class="text-xs text-amber-200 mt-0.5 font-medium">📌 규칙: ${item.rule}</p>
-                            <p class="text-xs text-slate-400 truncate">📍 ${item.address} | 📞 ${item.phone}</p>
+            container.innerHTML = irregularStore.map(item => `
+                <div class="p-3 bg-slate-900 border border-amber-600 rounded-xl flex flex-col justify-between gap-2 shadow-sm">
+                    <div>
+                        <div class="flex justify-between items-center mb-1">
+                            <span class="text-[11px] font-extrabold text-amber-400">⭐ 비정기/조건부</span>
+                            <button type="button" onclick="deleteIrregularItem(${item.id})" class="text-[11px] text-rose-400 hover:text-rose-300 font-bold px-1">✕ 삭제</button>
                         </div>
-                        <button type="button" onclick="openNaverNavi('${item.address}')" class="w-full bg-green-600 hover:bg-green-500 text-white font-bold text-xs py-2 rounded-lg transition shadow flex items-center justify-center gap-1">
-                            🗺️ 네이버 지도 길안내
-                        </button>
+                        <h3 class="text-sm font-bold text-white truncate">${item.name}</h3>
+                        <p class="text-xs text-amber-200 mt-0.5 font-medium">📌 규칙: ${item.rule}</p>
+                        <p class="text-xs text-slate-400 truncate">📍 ${item.address} | 📞 ${item.phone}</p>
                     </div>
-                `;
-            });
-            boardContainer.innerHTML = html;
+                    <button type="button" onclick="openNaverNavi('${item.address}')" class="w-full bg-green-600 hover:bg-green-500 text-white font-bold text-xs py-2 rounded-lg transition flex items-center justify-center gap-1">
+                        🗺️ 네이버 지도 길안내
+                    </button>
+                </div>
+            `).join('');
         }
 
         function renderRegisteredPlaces() {
             const container = document.getElementById('registered-places-container');
             document.getElementById('total-places-count').textContent = registeredPlaces.length;
-
             if (registeredPlaces.length === 0) {
-                container.innerHTML = `<div class="text-center py-8 text-slate-400 text-xs col-span-2 bg-slate-900 rounded-xl border border-slate-700">등록된 배송지가 없습니다. 위 폼에서 배송지를 등록해 보세요!</div>`;
+                container.innerHTML = `<div class="text-center py-8 text-slate-400 text-xs col-span-2 bg-slate-900 rounded-xl border border-slate-700">등록된 배송지가 없습니다.</div>`;
                 return;
             }
-
-            let html = '';
-            registeredPlaces.forEach((place) => {
-                html += `
-                    <div class="p-3 bg-slate-900 border border-slate-700 rounded-xl flex flex-col gap-2 shadow-sm">
-                        <div class="flex justify-between items-start">
-                            <div class="overflow-hidden">
-                                <h4 class="font-bold text-xs text-white truncate">${place.name}</h4>
-                                <p class="text-[11px] text-slate-400 truncate">📍 ${place.address}</p>
-                                <p class="text-[11px] text-slate-500 truncate">📞 ${place.phone} | 📦 ${place.item}</p>
-                            </div>
-                            <div class="flex items-center gap-1">
-                                <button type="button" onclick="startEditPlace(${place.id})" class="text-slate-300 hover:text-blue-400 text-xs font-bold px-1.5 py-0.5 bg-slate-800 rounded transition">✏️ 수정</button>
-                                <button type="button" onclick="deleteRegisteredPlace(${place.id})" class="text-slate-500 hover:text-rose-400 text-xs font-bold px-1">✕</button>
-                            </div>
+            container.innerHTML = registeredPlaces.map(place => `
+                <div class="p-3 bg-slate-900 border border-slate-700 rounded-xl flex flex-col gap-2 shadow-sm">
+                    <div class="flex justify-between items-start">
+                        <div class="overflow-hidden">
+                            <h4 class="font-bold text-xs text-white truncate">${place.name}</h4>
+                            <p class="text-[11px] text-slate-400 truncate">📍 ${place.address}</p>
+                            <p class="text-[11px] text-slate-500 truncate">📞 ${place.phone} | 📦 ${place.item}</p>
                         </div>
-                        <div class="flex flex-col border-t border-slate-800 pt-2 gap-1.5">
-                            <div class="flex items-center justify-between">
-                                <span class="text-[11px] font-bold text-slate-400">요일별 동선 배정:</span>
-                                <div class="flex gap-1">
-                                    <button type="button" onclick="addPlaceToDay(${JSON.stringify(place).replace(/"/g, '&quot;')}, '월')" class="bg-emerald-950 hover:bg-emerald-600 text-emerald-400 font-bold text-xs px-2 py-0.5 rounded border border-emerald-700 transition">월</button>
-                                    <button type="button" onclick="addPlaceToDay(${JSON.stringify(place).replace(/"/g, '&quot;')}, '화')" class="bg-emerald-950 hover:bg-emerald-600 text-emerald-400 font-bold text-xs px-2 py-0.5 rounded border border-emerald-700 transition">화</button>
-                                    <button type="button" onclick="addPlaceToDay(${JSON.stringify(place).replace(/"/g, '&quot;')}, '수')" class="bg-emerald-950 hover:bg-emerald-600 text-emerald-400 font-bold text-xs px-2 py-0.5 rounded border border-emerald-700 transition">수</button>
-                                    <button type="button" onclick="addPlaceToDay(${JSON.stringify(place).replace(/"/g, '&quot;')}, '목')" class="bg-emerald-950 hover:bg-emerald-600 text-emerald-400 font-bold text-xs px-2 py-0.5 rounded border border-emerald-700 transition">목</button>
-                                    <button type="button" onclick="addPlaceToDay(${JSON.stringify(place).replace(/"/g, '&quot;')}, '금')" class="bg-emerald-950 hover:bg-emerald-600 text-emerald-400 font-bold text-xs px-2 py-0.5 rounded border border-emerald-700 transition">금</button>
-                                </div>
-                            </div>
-                            <button type="button" onclick="addPlaceToIrregular(${JSON.stringify(place).replace(/"/g, '&quot;')})" class="w-full bg-amber-950 hover:bg-amber-600 hover:text-white text-amber-400 font-bold text-xs py-1.5 rounded border border-amber-700 transition flex items-center justify-center gap-1">
-                                ⭐ 비정기 특별 안내 보드에 상시 띄우기
-                            </button>
+                        <div class="flex items-center gap-1">
+                            <button type="button" onclick="startEditPlace(${place.id})" class="text-slate-300 hover:text-blue-400 text-xs font-bold px-1.5 py-0.5 bg-slate-800 rounded">✏️ 수정</button>
+                            <button type="button" onclick="deleteRegisteredPlace(${place.id})" class="text-slate-500 hover:text-rose-400 text-xs font-bold px-1">✕</button>
                         </div>
                     </div>
-                `;
-            });
-            container.innerHTML = html;
+                    <div class="flex flex-col border-t border-slate-800 pt-2 gap-1.5">
+                        <div class="flex items-center justify-between">
+                            <span class="text-[11px] font-bold text-slate-400">요일별 동선:</span>
+                            <div class="flex gap-1">
+                                ${['월','화','수','목','금'].map(d => `
+                                    <button type="button" onclick="addPlaceToDay(${JSON.stringify(place).replace(/"/g, '&quot;')}, '${d}')" class="bg-emerald-950 hover:bg-emerald-600 text-emerald-400 font-bold text-xs px-2 py-0.5 rounded border border-emerald-700">${d}</button>
+                                `).join('')}
+                            </div>
+                        </div>
+                        <button type="button" onclick="addPlaceToIrregular(${JSON.stringify(place).replace(/"/g, '&quot;')})" class="w-full bg-amber-950 hover:bg-amber-600 hover:text-white text-amber-400 font-bold text-xs py-1.5 rounded border border-amber-700 transition">
+                            ⭐ 비정기 특별 안내 보드에 상시 띄우기
+                        </button>
+                    </div>
+                </div>
+            `).join('');
         }
 
         function moveItem(index, direction) {
@@ -742,67 +576,62 @@
             const temp = list[index];
             list[index] = list[targetIdx];
             list[targetIdx] = temp;
-            saveStoreToFirebase();
+            db.ref('delivery_store').set(store);
         }
 
         function moveItemToAnotherDay(index) {
-            const days = ['월', '화', '수', '목', '금'];
-            const targetDay = prompt(`어느 요일로 이동하시겠습니까? (입력 예: 월, 화, 수, 목, 금)`, currentDay === '월' ? '화' : '월');
-            if (!targetDay || !days.includes(targetDay)) return;
-            if (targetDay === currentDay) return;
-
+            const targetDay = prompt(`어느 요일로 이동하시겠습니까? (월, 화, 수, 목, 금)`, currentDay === '월' ? '화' : '월');
+            if (!['월', '화', '수', '목', '금'].includes(targetDay) || targetDay === currentDay) return;
             const item = store[currentDay].splice(index, 1)[0];
             if (!store[targetDay]) store[targetDay] = [];
             store[targetDay].push(item);
-            saveStoreToFirebase();
+            db.ref('delivery_store').set(store);
         }
 
         function toggleDone(id) {
-            const list = store[currentDay] || [];
-            const target = list.find(x => x.id === id);
-            if (!target) return;
-            target.done = !target.done;
-            saveStoreToFirebase();
-            renderDelivery();
+            const target = (store[currentDay] || []).find(x => x.id === id);
+            if (target) {
+                target.done = !target.done;
+                db.ref('delivery_store').set(store);
+            }
         }
 
         function updateMemo(id, text) {
-            const target = store[currentDay].find(x => x.id === id);
-            if (target) { target.memo = text; saveStoreToFirebase(); }
+            const target = (store[currentDay] || []).find(x => x.id === id);
+            if (target) {
+                target.memo = text;
+                db.ref('delivery_store').set(store);
+            }
         }
 
         function deleteItem(id) {
-            store[currentDay] = store[currentDay].filter(x => x.id !== id);
-            saveStoreToFirebase();
+            store[currentDay] = (store[currentDay] || []).filter(x => x.id !== id);
+            db.ref('delivery_store').set(store);
         }
 
         function handleReset() {
-            if (!store[currentDay] || store[currentDay].length === 0) return;
-            if (confirm(`${currentDay}요일 배송 상태를 모두 '대기'로 되돌리시겠습니까?`)) {
+            if (!store[currentDay]?.length) return;
+            if (confirm(`${currentDay}요일 일정을 모두 대기로 되돌리시겠습니까?`)) {
                 store[currentDay].forEach(x => x.done = false);
-                saveStoreToFirebase();
+                db.ref('delivery_store').set(store);
             }
         }
 
         function handleDeleteAll() {
-            if (!store[currentDay] || store[currentDay].length === 0) return;
-            if (confirm(`정말로 ${currentDay}요일의 모든 배송지를 삭제하시겠습니까?`)) {
+            if (!store[currentDay]?.length) return;
+            if (confirm(`${currentDay}요일의 모든 배송지를 삭제하시겠습니까?`)) {
                 store[currentDay] = [];
-                saveStoreToFirebase();
+                db.ref('delivery_store').set(store);
             }
         }
 
-        // 네이버 지도 길안내
         function openNaverNavi(address) {
-            const encoded = encodeURIComponent(address);
-            window.open(`https://map.naver.com/v5/search/${encoded}`, '_blank');
+            window.open(`https://map.naver.com/v5/search/${encodeURIComponent(address)}`, '_blank');
         }
 
         function scrollCarousel(direction) {
             const container = document.getElementById('carousel-container');
-            if (!container) return;
-            const scrollAmount = container.clientWidth * 0.85;
-            container.scrollBy({ left: direction * scrollAmount, behavior: 'smooth' });
+            if (container) container.scrollBy({ left: direction * (container.clientWidth * 0.85), behavior: 'smooth' });
         }
 
         function renderDelivery() {
@@ -812,90 +641,72 @@
 
             document.getElementById('count-num').textContent = list.length;
             const doneCount = list.filter(x => x.done).length;
-            const totalCount = list.length;
-            const pct = totalCount > 0 ? Math.round((doneCount / totalCount) * 100) : 0;
-            document.getElementById('header-badge').textContent = `배송 진행률: ${doneCount} / ${totalCount}건 (${pct}%)`;
+            const pct = list.length > 0 ? Math.round((doneCount / list.length) * 100) : 0;
+            document.getElementById('header-badge').textContent = `배송 진행률: ${doneCount} / ${list.length}건 (${pct}%)`;
 
-            // 카러셀 랜더링
             if (list.length === 0) {
                 carouselContainer.innerHTML = `<div class="text-center py-6 text-slate-400 text-xs w-full">📍 ${currentDay}요일에 배정된 배송지가 없습니다.</div>`;
                 document.getElementById('carousel-indicator').textContent = '0 / 0';
-            } else {
-                let carouselHtml = '';
-                list.forEach((item, index) => {
-                    carouselHtml += `
-                        <div class="carousel-item min-w-[85%] sm:min-w-[45%] bg-slate-900 border ${item.done ? 'border-slate-700 opacity-60' : 'border-emerald-600'} p-3.5 rounded-xl flex flex-col justify-between gap-2 flex-shrink-0">
-                            <div>
-                                <div class="flex justify-between items-center mb-1">
-                                    <span class="text-[11px] font-extrabold ${item.done ? 'text-slate-500' : 'text-emerald-400'}">
-                                        #${index + 1} 배송지 ${item.done ? '(완료)' : ''}
-                                    </span>
-                                    <button type="button" onclick="toggleDone(${item.id})" class="text-[11px] px-2 py-0.5 rounded font-bold ${item.done ? 'bg-slate-700 text-slate-300' : 'bg-emerald-600 text-white'}">
-                                        ${item.done ? '✓ 완료됨' : '⏳ 배송대기'}
-                                    </button>
-                                </div>
-                                <h3 class="text-base font-bold text-white truncate">${item.name}</h3>
-                                <p class="text-xs text-slate-400 truncate mt-0.5">📍 ${item.address}</p>
-                                <p class="text-xs text-slate-400 truncate">📞 ${item.phone} | 📦 ${item.item}</p>
-                            </div>
-                            <button type="button" onclick="openNaverNavi('${item.address}')" class="w-full bg-green-600 hover:bg-green-500 text-white font-bold text-xs py-2 rounded-lg transition shadow flex items-center justify-center gap-1">
-                                🗺️ 네이버 지도 길안내
-                            </button>
-                        </div>
-                    `;
-                });
-                carouselContainer.innerHTML = carouselHtml;
-                document.getElementById('carousel-indicator').textContent = `전체 ${list.length}곳`;
-            }
-
-            // 상세 목록 랜더링
-            if (list.length === 0) {
-                container.innerHTML = `<div class="text-center py-12 text-slate-400 text-sm bg-slate-900 rounded-xl border border-dashed border-slate-700">📍 ${currentDay}요일에 배정된 배송지가 없습니다.<br>[전체 배송지 관리] 탭에서 요일 버튼을 눌러 동선에 추가해 보세요!</div>`;
+                container.innerHTML = `<div class="text-center py-12 text-slate-400 text-sm bg-slate-900 rounded-xl border border-dashed border-slate-700">📍 ${currentDay}요일에 배정된 배송지가 없습니다.</div>`;
                 return;
             }
 
-            let html = '';
-            list.forEach((item, index) => {
-                html += `
-                    <div class="p-4 rounded-xl border ${item.done ? 'bg-slate-900 border-slate-800 opacity-50' : 'bg-slate-900 border-slate-700 shadow-md'} flex flex-col gap-2.5">
-                        <div class="flex justify-between items-center">
-                            <div class="flex items-center gap-2">
-                                <span class="bg-emerald-600 text-white w-5 h-5 rounded-full flex items-center justify-center text-xs font-bold">${index + 1}</span>
-                                <h3 class="font-bold text-white text-sm ${item.done ? 'line-through text-slate-500' : ''}">${item.name}</h3>
-                            </div>
-                            <div class="flex items-center gap-1">
-                                <button type="button" onclick="moveItem(${index}, -1)" class="text-slate-400 hover:text-slate-200 text-xs px-1 font-bold" title="위로">▲</button>
-                                <button type="button" onclick="moveItem(${index}, 1)" class="text-slate-400 hover:text-slate-200 text-xs px-1 font-bold" title="아래로">▼</button>
-                                <button type="button" onclick="moveItemToAnotherDay(${index})" class="text-xs text-blue-400 hover:text-blue-300 font-bold px-1.5 py-0.5 bg-slate-800 border border-slate-700 rounded">요일이동</button>
-                                <button type="button" onclick="toggleDone(${item.id})" class="text-xs px-2.5 py-1 rounded-lg font-bold ${item.done ? 'bg-emerald-600 text-white' : 'bg-amber-900 text-amber-200 border border-amber-700'}">
-                                    ${item.done ? '✓ 완료' : '⏳ 대기'}
-                                </button>
-                                <button type="button" onclick="deleteItem(${item.id})" class="text-slate-500 hover:text-rose-400 text-xs font-bold px-1">✕</button>
-                            </div>
-                        </div>
-                        <div class="text-xs text-slate-300 bg-slate-950 p-2.5 rounded-lg border border-slate-800 flex flex-col gap-0.5">
-                            <p class="font-semibold text-slate-200">📍 주소: ${item.address}</p>
-                            <p>📞 연락처: ${item.phone}</p>
-                            <p class="text-emerald-400 font-medium">📦 물량: ${item.item}</p>
-                        </div>
-                        <div>
-                            <input type="text" value="${item.memo || ''}" onchange="updateMemo(${item.id}, this.value)" placeholder="📝 현장 특이사항 메모 (자동저장)" class="w-full px-2.5 py-1 border border-slate-700 rounded-lg text-xs bg-slate-950 text-slate-200 focus:outline-none focus:ring-1 focus:ring-emerald-500">
-                        </div>
-                        <div class="pt-1">
-                            <button type="button" onclick="openNaverNavi('${item.address}')" class="w-full bg-green-600 hover:bg-green-500 text-white font-bold py-2 rounded-lg text-xs shadow flex items-center justify-center gap-1">
-                                🗺️ 네이버 지도 길안내
+            document.getElementById('carousel-indicator').textContent = `전체 ${list.length}곳`;
+            carouselContainer.innerHTML = list.map((item, index) => `
+                <div class="carousel-item min-w-[85%] sm:min-w-[45%] bg-slate-900 border ${item.done ? 'border-slate-700 opacity-60' : 'border-emerald-600'} p-3.5 rounded-xl flex flex-col justify-between gap-2 flex-shrink-0">
+                    <div>
+                        <div class="flex justify-between items-center mb-1">
+                            <span class="text-[11px] font-extrabold ${item.done ? 'text-slate-500' : 'text-emerald-400'}">#${index + 1} 배송지 ${item.done ? '(완료)' : ''}</span>
+                            <button type="button" onclick="toggleDone(${item.id})" class="text-[11px] px-2 py-0.5 rounded font-bold ${item.done ? 'bg-slate-700 text-slate-300' : 'bg-emerald-600 text-white'}">
+                                ${item.done ? '✓ 완료됨' : '⏳ 배송대기'}
                             </button>
                         </div>
+                        <h3 class="text-base font-bold text-white truncate">${item.name}</h3>
+                        <p class="text-xs text-slate-400 truncate mt-0.5">📍 ${item.address}</p>
+                        <p class="text-xs text-slate-400 truncate">📞 ${item.phone} | 📦 ${item.item}</p>
                     </div>
-                `;
-            });
-            container.innerHTML = html;
+                    <button type="button" onclick="openNaverNavi('${item.address}')" class="w-full bg-green-600 hover:bg-green-500 text-white font-bold text-xs py-2 rounded-lg transition flex items-center justify-center gap-1 shadow">
+                        🗺️ 네이버 지도 길안내
+                    </button>
+                </div>
+            `).join('');
+
+            container.innerHTML = list.map((item, index) => `
+                <div class="p-4 rounded-xl border ${item.done ? 'bg-slate-900 border-slate-800 opacity-50' : 'bg-slate-900 border-slate-700 shadow-md'} flex flex-col gap-2.5">
+                    <div class="flex justify-between items-center">
+                        <div class="flex items-center gap-2">
+                            <span class="bg-emerald-600 text-white w-5 h-5 rounded-full flex items-center justify-center text-xs font-bold">${index + 1}</span>
+                            <h3 class="font-bold text-white text-sm ${item.done ? 'line-through text-slate-500' : ''}">${item.name}</h3>
+                        </div>
+                        <div class="flex items-center gap-1">
+                            <button type="button" onclick="moveItem(${index}, -1)" class="text-slate-400 hover:text-slate-200 text-xs px-1 font-bold">▲</button>
+                            <button type="button" onclick="moveItem(${index}, 1)" class="text-slate-400 hover:text-slate-200 text-xs px-1 font-bold">▼</button>
+                            <button type="button" onclick="moveItemToAnotherDay(${index})" class="text-xs text-blue-400 hover:text-blue-300 font-bold px-1.5 py-0.5 bg-slate-800 border border-slate-700 rounded">요일이동</button>
+                            <button type="button" onclick="toggleDone(${item.id})" class="text-xs px-2.5 py-1 rounded-lg font-bold ${item.done ? 'bg-emerald-600 text-white' : 'bg-amber-900 text-amber-200 border border-amber-700'}">
+                                ${item.done ? '✓ 완료' : '⏳ 대기'}
+                            </button>
+                            <button type="button" onclick="deleteItem(${item.id})" class="text-slate-500 hover:text-rose-400 text-xs font-bold px-1">✕</button>
+                        </div>
+                    </div>
+                    <div class="text-xs text-slate-300 bg-slate-950 p-2.5 rounded-lg border border-slate-800 flex flex-col gap-0.5">
+                        <p class="font-semibold text-slate-200">📍 주소: ${item.address}</p>
+                        <p>📞 연락처: ${item.phone}</p>
+                        <p class="text-emerald-400 font-medium">📦 물량: ${item.item}</p>
+                    </div>
+                    <div>
+                        <input type="text" value="${item.memo || ''}" onchange="updateMemo(${item.id}, this.value)" placeholder="📝 현장 특이사항 메모 (자동저장)" class="w-full px-2.5 py-1 border border-slate-700 rounded-lg text-xs bg-slate-950 text-slate-200 focus:outline-none focus:ring-1 focus:ring-emerald-500">
+                    </div>
+                    <div class="pt-1">
+                        <button type="button" onclick="openNaverNavi('${item.address}')" class="w-full bg-green-600 hover:bg-green-500 text-white font-bold py-2 rounded-lg text-xs shadow flex items-center justify-center gap-1">
+                            🗺️ 네이버 지도 길안내
+                        </button>
+                    </div>
+                </div>
+            `).join('');
         }
 
         function formatDate(y, m, d) {
-            const mm = m < 10 ? '0' + m : m;
-            const dd = d < 10 ? '0' + d : d;
-            return `${y}-${mm}-${dd}`;
+            return `${y}-${String(m).padStart(2, '0')}-${String(d).padStart(2, '0')}`;
         }
 
         function prevMonth() { calMonth--; if (calMonth < 0) { calMonth = 11; calYear--; } renderCalendar(); }
@@ -909,32 +720,19 @@
             const lastDate = new Date(calYear, calMonth + 1, 0).getDate();
 
             for (let i = 0; i < firstDay; i++) {
-                const emptyCell = document.createElement('div');
-                emptyCell.className = "h-9";
-                daysContainer.appendChild(emptyCell);
+                daysContainer.appendChild(Object.assign(document.createElement('div'), { className: "h-9" }));
             }
 
             for (let date = 1; date <= lastDate; date++) {
                 const dateStr = formatDate(calYear, calMonth + 1, date);
                 const isSelected = dateStr === selectedDateStr;
-                const hasNote = calendarNotes[dateStr] && calendarNotes[dateStr].trim() !== '';
+                const hasNote = Boolean(calendarNotes[dateStr]?.trim());
 
                 const cell = document.createElement('button');
                 cell.type = 'button';
                 cell.onclick = () => selectCalendarDate(dateStr);
-
-                let baseClass = "h-9 rounded-lg font-medium flex flex-col items-center justify-center relative transition ";
-                if (isSelected) baseClass += "bg-emerald-600 text-white font-bold shadow-sm ";
-                else baseClass += "hover:bg-slate-700 text-slate-300 ";
-
-                cell.className = baseClass;
-                cell.innerHTML = `<span>${date}</span>`;
-
-                if (hasNote) {
-                    const dot = document.createElement('span');
-                    dot.className = isSelected ? "w-1.5 h-1.5 bg-white rounded-full mt-0.5" : "w-1.5 h-1.5 bg-emerald-400 rounded-full mt-0.5";
-                    cell.appendChild(dot);
-                }
+                cell.className = `h-9 rounded-lg font-medium flex flex-col items-center justify-center relative transition ${isSelected ? 'bg-emerald-600 text-white font-bold shadow-sm' : 'hover:bg-slate-700 text-slate-300'}`;
+                cell.innerHTML = `<span>${date}</span>${hasNote ? `<span class="w-1.5 h-1.5 ${isSelected ? 'bg-white' : 'bg-emerald-400'} rounded-full mt-0.5"></span>` : ''}`;
                 daysContainer.appendChild(cell);
             }
             renderCalendarNotesList();
@@ -951,14 +749,14 @@
             const text = document.getElementById('calendar-note-input').value.trim();
             if (text) calendarNotes[selectedDateStr] = text;
             else delete calendarNotes[selectedDateStr];
-            saveCalendarToFirebase();
-            alert(`${selectedDateStr} 특이사항이 공유 저장되었습니다.`);
+            db.ref('calendar_notes').set(calendarNotes);
+            alert(`${selectedDateStr} 특이사항이 저장되었습니다.`);
         }
 
         function deleteCalendarNote(dateStr) {
             if (confirm(`${dateStr} 특이사항을 삭제하시겠습니까?`)) {
                 delete calendarNotes[dateStr];
-                saveCalendarToFirebase();
+                db.ref('calendar_notes').set(calendarNotes);
                 if (selectedDateStr === dateStr) document.getElementById('calendar-note-input').value = '';
             }
         }
@@ -966,28 +764,22 @@
         function renderCalendarNotesList() {
             const listContainer = document.getElementById('calendar-notes-list');
             const dates = Object.keys(calendarNotes).sort().reverse();
-
             if (dates.length === 0) {
                 listContainer.innerHTML = `<div class="text-center py-8 text-slate-400 text-xs bg-slate-900 rounded-xl border border-dashed border-slate-700">등록된 특이사항 기록이 없습니다.</div>`;
                 return;
             }
-
-            let html = '';
-            dates.forEach(dStr => {
-                html += `
-                    <div class="p-3 bg-slate-900 border border-slate-700 rounded-xl flex justify-between items-start gap-2">
-                        <div class="flex flex-col gap-1">
-                            <span class="font-bold text-xs text-emerald-400">📅 ${dStr}</span>
-                            <p class="text-xs text-slate-300 whitespace-pre-wrap">${calendarNotes[dStr]}</p>
-                        </div>
-                        <div class="flex gap-1">
-                            <button type="button" onclick="selectCalendarDate('${dStr}')" class="text-xs text-slate-400 hover:text-emerald-400 font-bold px-1.5 py-0.5">수정</button>
-                            <button type="button" onclick="deleteCertificateItem('${dStr}')" class="text-xs text-rose-400 hover:text-rose-300 font-bold px-1.5 py-0.5">✕</button>
-                        </div>
+            listContainer.innerHTML = dates.map(dStr => `
+                <div class="p-3 bg-slate-900 border border-slate-700 rounded-xl flex justify-between items-start gap-2">
+                    <div class="flex flex-col gap-1">
+                        <span class="font-bold text-xs text-emerald-400">📅 ${dStr}</span>
+                        <p class="text-xs text-slate-300 whitespace-pre-wrap">${calendarNotes[dStr]}</p>
                     </div>
-                `;
-            });
-            listContainer.innerHTML = html;
+                    <div class="flex gap-1">
+                        <button type="button" onclick="selectCalendarDate('${dStr}')" class="text-xs text-slate-400 hover:text-emerald-400 font-bold px-1.5 py-0.5">수정</button>
+                        <button type="button" onclick="deleteCalendarNote('${dStr}')" class="text-xs text-rose-400 hover:text-rose-300 font-bold px-1.5 py-0.5">✕</button>
+                    </div>
+                </div>
+            `).join('');
         }
     </script>
 </body>
