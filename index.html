@@ -79,19 +79,19 @@
                 <!-- [왼쪽] 밑반찬통 수량 및 완료 체크 -->
                 <div class="bg-slate-800 border border-slate-700 p-6 rounded-2xl shadow-lg flex flex-col justify-between items-center min-h-[300px]">
                     <div class="w-full text-center pb-3 border-b border-slate-700">
-                        <h3 class="text-xl font-bold text-slate-100 tracking-wider">밑반찬통</h3>[cite: 4]
+                        <h3 class="text-xl font-bold text-slate-100 tracking-wider">밑반찬통</h3>
                         <p class="text-xs text-slate-400 mt-0.5">금일 수령 반찬통 수량</p>
                     </div>
 
                     <!-- 숫자 증감 영역 -->
                     <div class="flex items-center justify-center gap-7 my-auto py-4">
-                        <button type="button" onclick="updateSideDishCount(-1)" class="w-14 h-14 rounded-2xl bg-slate-700 hover:bg-slate-600 active:scale-95 text-slate-200 text-3xl font-bold flex items-center justify-center transition select-none shadow">[cite: 4]
+                        <button type="button" onclick="updateSideDishCount(-1)" class="w-14 h-14 rounded-2xl bg-slate-700 hover:bg-slate-600 active:scale-95 text-slate-200 text-3xl font-bold flex items-center justify-center transition select-none shadow">
                             －
                         </button>
-                        <span id="side-dish-count-display" class="text-6xl font-black text-emerald-400 tracking-tight min-w-[3ch] text-center select-none">[cite: 4]
+                        <span id="side-dish-count-display" class="text-6xl font-black text-emerald-400 tracking-tight min-w-[3ch] text-center select-none">
                             0
                         </span>
-                        <button type="button" onclick="updateSideDishCount(1)" class="w-14 h-14 rounded-2xl bg-slate-700 hover:bg-slate-600 active:scale-95 text-slate-200 text-3xl font-bold flex items-center justify-center transition select-none shadow">[cite: 4]
+                        <button type="button" onclick="updateSideDishCount(1)" class="w-14 h-14 rounded-2xl bg-slate-700 hover:bg-slate-600 active:scale-95 text-slate-200 text-3xl font-bold flex items-center justify-center transition select-none shadow">
                             ＋
                         </button>
                     </div>
@@ -99,7 +99,7 @@
                     <!-- 수령 완료 체크박스 -->
                     <div class="flex items-center gap-2 pt-3 border-t border-slate-700/60 w-full justify-center">
                         <label class="flex items-center gap-2.5 cursor-pointer select-none group">
-                            <input type="checkbox" id="side-dish-done-chk" onchange="toggleSideDishDone()" class="w-7 h-7 rounded-lg bg-slate-900 border-2 border-slate-600 text-emerald-500 focus:ring-0 focus:ring-offset-0 cursor-pointer transition">[cite: 4]
+                            <input type="checkbox" id="side-dish-done-chk" onchange="toggleSideDishDone()" class="w-7 h-7 rounded-lg bg-slate-900 border-2 border-slate-600 text-emerald-500 focus:ring-0 focus:ring-offset-0 cursor-pointer transition">
                             <span class="text-sm font-bold text-slate-300 group-hover:text-emerald-400 transition">수령 완료 체크</span>
                         </label>
                     </div>
@@ -108,19 +108,19 @@
                 <!-- [오른쪽] 기탁서 체크리스트 & 신규 입력 -->
                 <div class="bg-slate-800 border border-slate-700 p-6 rounded-2xl shadow-lg flex flex-col justify-between min-h-[300px]">
                     <div class="w-full text-center pb-3 border-b border-slate-700">
-                        <h3 class="text-xl font-bold text-slate-100 tracking-wider">기탁서</h3>[cite: 4]
+                        <h3 class="text-xl font-bold text-slate-100 tracking-wider">기탁서</h3>
                         <p class="text-xs text-slate-400 mt-0.5">인수 및 확인 기탁처</p>
                     </div>
 
                     <!-- 기탁서 리스트 목록 -->
-                    <div id="certificate-list-container" class="flex flex-col gap-2.5 my-3 max-h-[190px] overflow-y-auto pr-1">[cite: 4]
+                    <div id="certificate-list-container" class="flex flex-col gap-2.5 my-3 max-h-[190px] overflow-y-auto pr-1">
                         <div class="text-center py-8 text-slate-500 text-xs">등록된 기탁서 항목이 없습니다.</div>
                     </div>
 
                     <!-- 기탁서 입력 폼 -->
                     <form onsubmit="handleAddNewCertificate(event)" class="flex gap-2 pt-3 border-t border-slate-700/60 mt-auto">
-                        <input type="text" id="input-certificate-text" placeholder="기탁서를 입력하세요" class="flex-1 px-3.5 py-2.5 bg-slate-900 border border-slate-700 text-slate-200 placeholder-slate-500 rounded-xl text-xs focus:outline-none focus:border-emerald-500">[cite: 4]
-                        <button type="submit" class="bg-emerald-600 hover:bg-emerald-500 text-white font-bold px-5 py-2.5 rounded-xl text-xs whitespace-nowrap transition active:scale-95 shadow">[cite: 4]
+                        <input type="text" id="input-certificate-text" placeholder="기탁서를 입력하세요" class="flex-1 px-3.5 py-2.5 bg-slate-900 border border-slate-700 text-slate-200 placeholder-slate-500 rounded-xl text-xs focus:outline-none focus:border-emerald-500">
+                        <button type="submit" class="bg-emerald-600 hover:bg-emerald-500 text-white font-bold px-5 py-2.5 rounded-xl text-xs whitespace-nowrap transition active:scale-95 shadow">
                             입력
                         </button>
                     </form>
