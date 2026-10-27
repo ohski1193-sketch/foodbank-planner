@@ -31,96 +31,119 @@
         <header class="bg-slate-800 border border-slate-700 text-white p-5 rounded-2xl shadow-lg mb-5 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
             <div>
                 <h1 class="text-2xl font-bold flex items-center gap-2">
-                    🚚 <span class="text-emerald-400">나주시 기초푸드뱅크</span> 경로안내
+                    🍱 <span class="text-emerald-400">나주시 기초푸드뱅크</span> 플래너
                 </h1>
-                <p class="text-slate-400 text-xs mt-1">전직원 실시간 동기화 주간 배송지 & 네이버 길안내 플래너</p>
+                <p class="text-slate-400 text-xs mt-1">밑반찬통·기탁서 관리 & 실시간 주간 배송 경로 안내</p>
             </div>
             <div id="header-badge" class="bg-emerald-950 text-emerald-400 border border-emerald-700 px-4 py-2 rounded-xl text-xs font-semibold">
-                진행률: 0 / 0건 (0%)
+                배송 진행률: 0 / 0건 (0%)
             </div>
         </header>
 
-        <!-- 메인 탭 -->
-        <div class="flex gap-2 mb-6 bg-slate-800 p-1.5 rounded-2xl border border-slate-700">
-            <button type="button" onclick="switchMainTab('delivery')" id="main-tab-delivery" class="flex-1 py-3 rounded-xl font-bold text-xs sm:text-sm text-center transition bg-emerald-600 text-white shadow-sm">
-                🚛 주간 배송 목록 & 길안내
+        <!-- 메인 탭 네비게이션: 1. 밑반찬통&기탁서 / 2. 배송 경로 / 3. 배송 특이사항 / 4. 전체 배송지 관리 -->
+        <div class="grid grid-cols-2 sm:grid-cols-4 gap-2 mb-6 bg-slate-800 p-1.5 rounded-2xl border border-slate-700">
+            <button type="button" onclick="switchMainTab('sidedish')" id="main-tab-sidedish" class="py-3 rounded-xl font-bold text-xs sm:text-sm text-center transition bg-emerald-600 text-white shadow-sm">
+                🍱 밑반찬통 & 기탁서
             </button>
-            <button type="button" onclick="switchMainTab('calendar')" id="main-tab-calendar" class="flex-1 py-3 rounded-xl font-bold text-xs sm:text-sm text-center transition text-slate-400 hover:text-slate-200">
+            <button type="button" onclick="switchMainTab('delivery')" id="main-tab-delivery" class="py-3 rounded-xl font-bold text-xs sm:text-sm text-center transition text-slate-400 hover:text-slate-200">
+                🚛 배송 경로 & 길안내
+            </button>
+            <button type="button" onclick="switchMainTab('calendar')" id="main-tab-calendar" class="py-3 rounded-xl font-bold text-xs sm:text-sm text-center transition text-slate-400 hover:text-slate-200">
                 📅 배송 특이사항
             </button>
-            <button type="button" onclick="switchMainTab('places')" id="main-tab-places" class="flex-1 py-3 rounded-xl font-bold text-xs sm:text-sm text-center transition text-slate-400 hover:text-slate-200">
+            <button type="button" onclick="switchMainTab('places')" id="main-tab-places" class="py-3 rounded-xl font-bold text-xs sm:text-sm text-center transition text-slate-400 hover:text-slate-200">
                 📍 전체 배송지 관리
             </button>
         </div>
 
-        <!-- ==================== 1. 주간 배송 통합 섹션 ==================== -->
-        <div id="section-delivery" class="flex flex-col gap-5">
+        <!-- ==================== [탭 1] 밑반찬통 & 기탁서 전용 첫 페이지 ==================== -->
+        <div id="section-sidedish" class="flex flex-col gap-5">
             <!-- 요일 선택 탭 -->
             <div class="flex gap-2">
-                <button type="button" onclick="changeDay('월')" id="tab-월" class="day-btn flex-1 py-3 rounded-xl font-bold text-sm bg-slate-800 text-slate-400 border border-slate-700 shadow-sm">월</button>
-                <button type="button" onclick="changeDay('화')" id="tab-화" class="day-btn flex-1 py-3 rounded-xl font-bold text-sm bg-slate-800 text-slate-400 border border-slate-700 shadow-sm">화</button>
-                <button type="button" onclick="changeDay('수')" id="tab-수" class="day-btn flex-1 py-3 rounded-xl font-bold text-sm bg-slate-800 text-slate-400 border border-slate-700 shadow-sm">수</button>
-                <button type="button" onclick="changeDay('목')" id="tab-목" class="day-btn flex-1 py-3 rounded-xl font-bold text-sm bg-slate-800 text-slate-400 border border-slate-700 shadow-sm">목</button>
-                <button type="button" onclick="changeDay('금')" id="tab-금" class="day-btn flex-1 py-3 rounded-xl font-bold text-sm bg-slate-800 text-slate-400 border border-slate-700 shadow-sm">금</button>
+                <button type="button" onclick="changeDay('월')" class="day-btn-sidedish flex-1 py-3 rounded-xl font-bold text-sm bg-slate-800 text-slate-400 border border-slate-700 shadow-sm" id="tab-sidedish-월">월</button>
+                <button type="button" onclick="changeDay('화')" class="day-btn-sidedish flex-1 py-3 rounded-xl font-bold text-sm bg-slate-800 text-slate-400 border border-slate-700 shadow-sm" id="tab-sidedish-화">화</button>
+                <button type="button" onclick="changeDay('수')" class="day-btn-sidedish flex-1 py-3 rounded-xl font-bold text-sm bg-slate-800 text-slate-400 border border-slate-700 shadow-sm" id="tab-sidedish-수">수</button>
+                <button type="button" onclick="changeDay('목')" class="day-btn-sidedish flex-1 py-3 rounded-xl font-bold text-sm bg-slate-800 text-slate-400 border border-slate-700 shadow-sm" id="tab-sidedish-목">목</button>
+                <button type="button" onclick="changeDay('금')" class="day-btn-sidedish flex-1 py-3 rounded-xl font-bold text-sm bg-slate-800 text-slate-400 border border-slate-700 shadow-sm" id="tab-sidedish-금">금</button>
             </div>
 
-            <!-- 요일 표시 타이틀 배너 -->
-            <div class="bg-slate-800 border border-slate-700 px-4 py-2 rounded-xl flex justify-between items-center text-xs">
-                <span class="font-bold text-emerald-400">📅 선택 요일: <span id="current-day-banner" class="text-white text-sm font-bold">월요일</span></span>
-                <span class="text-slate-400">실시간 자동 동기화 중</span>
+            <!-- 요일 타이틀 배너 -->
+            <div class="bg-slate-800 border border-slate-700 px-4 py-2.5 rounded-xl flex justify-between items-center text-xs">
+                <span class="font-bold text-emerald-400">📅 현재 요일: <span id="current-day-banner-sidedish" class="text-white text-sm font-extrabold">월요일</span></span>
+                <span class="text-slate-400">전직원 실시간 동기화 중</span>
             </div>
 
-            <!-- [스케치 기반] 밑반찬통 & 기탁서 좌우 2분할 통합 카드 -->
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <!-- 밑반찬통 & 기탁서 좌우 2분할 카드 -->
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
                 
-                <!-- [왼쪽] 밑반찬통 수량 및 수령 체크 -->
-                <div class="bg-slate-800 border border-slate-700 p-5 rounded-2xl shadow-lg flex flex-col justify-between items-center min-h-[220px]">
-                    <div class="w-full text-center pb-2 border-b border-slate-700">
-                        <h3 class="text-lg font-bold text-slate-100 tracking-wider">밑반찬통</h3>
+                <!-- [왼쪽] 밑반찬통 수량 및 완료 체크 -->
+                <div class="bg-slate-800 border border-slate-700 p-6 rounded-2xl shadow-lg flex flex-col justify-between items-center min-h-[300px]">
+                    <div class="w-full text-center pb-3 border-b border-slate-700">
+                        <h3 class="text-xl font-bold text-slate-100 tracking-wider">밑반찬통</h3>[cite: 4]
+                        <p class="text-xs text-slate-400 mt-0.5">금일 수령 반찬통 수량</p>
                     </div>
 
                     <!-- 숫자 증감 영역 -->
-                    <div class="flex items-center justify-center gap-6 my-auto py-2">
-                        <button type="button" onclick="updateSideDishCount(-1)" class="w-12 h-12 rounded-2xl bg-slate-700 hover:bg-slate-600 active:scale-95 text-slate-200 text-2xl font-bold flex items-center justify-center transition select-none shadow">
+                    <div class="flex items-center justify-center gap-7 my-auto py-4">
+                        <button type="button" onclick="updateSideDishCount(-1)" class="w-14 h-14 rounded-2xl bg-slate-700 hover:bg-slate-600 active:scale-95 text-slate-200 text-3xl font-bold flex items-center justify-center transition select-none shadow">[cite: 4]
                             －
                         </button>
-                        <span id="side-dish-count-display" class="text-5xl font-black text-emerald-400 tracking-tight min-w-[3ch] text-center select-none">
+                        <span id="side-dish-count-display" class="text-6xl font-black text-emerald-400 tracking-tight min-w-[3ch] text-center select-none">[cite: 4]
                             0
                         </span>
-                        <button type="button" onclick="updateSideDishCount(1)" class="w-12 h-12 rounded-2xl bg-slate-700 hover:bg-slate-600 active:scale-95 text-slate-200 text-2xl font-bold flex items-center justify-center transition select-none shadow">
+                        <button type="button" onclick="updateSideDishCount(1)" class="w-14 h-14 rounded-2xl bg-slate-700 hover:bg-slate-600 active:scale-95 text-slate-200 text-3xl font-bold flex items-center justify-center transition select-none shadow">[cite: 4]
                             ＋
                         </button>
                     </div>
 
                     <!-- 수령 완료 체크박스 -->
-                    <div class="flex items-center gap-2 pt-2">
-                        <label class="flex items-center gap-2 cursor-pointer select-none group">
-                            <input type="checkbox" id="side-dish-done-chk" onchange="toggleSideDishDone()" class="w-6 h-6 rounded-lg bg-slate-900 border-2 border-slate-600 text-emerald-500 focus:ring-0 focus:ring-offset-0 cursor-pointer transition">
-                            <span class="text-xs font-semibold text-slate-300 group-hover:text-emerald-400 transition">수령 완료</span>
+                    <div class="flex items-center gap-2 pt-3 border-t border-slate-700/60 w-full justify-center">
+                        <label class="flex items-center gap-2.5 cursor-pointer select-none group">
+                            <input type="checkbox" id="side-dish-done-chk" onchange="toggleSideDishDone()" class="w-7 h-7 rounded-lg bg-slate-900 border-2 border-slate-600 text-emerald-500 focus:ring-0 focus:ring-offset-0 cursor-pointer transition">[cite: 4]
+                            <span class="text-sm font-bold text-slate-300 group-hover:text-emerald-400 transition">수령 완료 체크</span>
                         </label>
                     </div>
                 </div>
 
                 <!-- [오른쪽] 기탁서 체크리스트 & 신규 입력 -->
-                <div class="bg-slate-800 border border-slate-700 p-5 rounded-2xl shadow-lg flex flex-col justify-between min-h-[220px]">
-                    <div class="w-full text-center pb-2 border-b border-slate-700">
-                        <h3 class="text-lg font-bold text-slate-100 tracking-wider">기탁서</h3>
+                <div class="bg-slate-800 border border-slate-700 p-6 rounded-2xl shadow-lg flex flex-col justify-between min-h-[300px]">
+                    <div class="w-full text-center pb-3 border-b border-slate-700">
+                        <h3 class="text-xl font-bold text-slate-100 tracking-wider">기탁서</h3>[cite: 4]
+                        <p class="text-xs text-slate-400 mt-0.5">인수 및 확인 기탁처</p>
                     </div>
 
                     <!-- 기탁서 리스트 목록 -->
-                    <div id="certificate-list-container" class="flex flex-col gap-2 my-2 max-h-[140px] overflow-y-auto pr-1">
-                        <div class="text-center py-6 text-slate-500 text-xs">등록된 기탁서 항목이 없습니다.</div>
+                    <div id="certificate-list-container" class="flex flex-col gap-2.5 my-3 max-h-[190px] overflow-y-auto pr-1">[cite: 4]
+                        <div class="text-center py-8 text-slate-500 text-xs">등록된 기탁서 항목이 없습니다.</div>
                     </div>
 
                     <!-- 기탁서 입력 폼 -->
-                    <form onsubmit="handleAddNewCertificate(event)" class="flex gap-2 pt-2 border-t border-slate-700/60 mt-1">
-                        <input type="text" id="input-certificate-text" placeholder="기탁서를 입력하세요" class="flex-1 px-3 py-2 bg-slate-900 border border-slate-700 text-slate-200 placeholder-slate-500 rounded-xl text-xs focus:outline-none focus:border-emerald-500">
-                        <button type="submit" class="bg-emerald-600 hover:bg-emerald-500 text-white font-bold px-4 py-2 rounded-xl text-xs whitespace-nowrap transition active:scale-95 shadow">
+                    <form onsubmit="handleAddNewCertificate(event)" class="flex gap-2 pt-3 border-t border-slate-700/60 mt-auto">
+                        <input type="text" id="input-certificate-text" placeholder="기탁서를 입력하세요" class="flex-1 px-3.5 py-2.5 bg-slate-900 border border-slate-700 text-slate-200 placeholder-slate-500 rounded-xl text-xs focus:outline-none focus:border-emerald-500">[cite: 4]
+                        <button type="submit" class="bg-emerald-600 hover:bg-emerald-500 text-white font-bold px-5 py-2.5 rounded-xl text-xs whitespace-nowrap transition active:scale-95 shadow">[cite: 4]
                             입력
                         </button>
                     </form>
                 </div>
 
+            </div>
+        </div>
+
+        <!-- ==================== [탭 2] 배송 경로 & 길안내 ==================== -->
+        <div id="section-delivery" class="hidden flex-col gap-5">
+            <!-- 요일 선택 탭 -->
+            <div class="flex gap-2">
+                <button type="button" onclick="changeDay('월')" class="day-btn-delivery flex-1 py-3 rounded-xl font-bold text-sm bg-slate-800 text-slate-400 border border-slate-700 shadow-sm" id="tab-delivery-월">월</button>
+                <button type="button" onclick="changeDay('화')" class="day-btn-delivery flex-1 py-3 rounded-xl font-bold text-sm bg-slate-800 text-slate-400 border border-slate-700 shadow-sm" id="tab-delivery-화">화</button>
+                <button type="button" onclick="changeDay('수')" class="day-btn-delivery flex-1 py-3 rounded-xl font-bold text-sm bg-slate-800 text-slate-400 border border-slate-700 shadow-sm" id="tab-delivery-수">수</button>
+                <button type="button" onclick="changeDay('목')" class="day-btn-delivery flex-1 py-3 rounded-xl font-bold text-sm bg-slate-800 text-slate-400 border border-slate-700 shadow-sm" id="tab-delivery-목">목</button>
+                <button type="button" onclick="changeDay('금')" class="day-btn-delivery flex-1 py-3 rounded-xl font-bold text-sm bg-slate-800 text-slate-400 border border-slate-700 shadow-sm" id="tab-delivery-금">금</button>
+            </div>
+
+            <!-- 요일 타이틀 배너 -->
+            <div class="bg-slate-800 border border-slate-700 px-4 py-2.5 rounded-xl flex justify-between items-center text-xs">
+                <span class="font-bold text-emerald-400">📅 선택 요일: <span id="current-day-banner-delivery" class="text-white text-sm font-extrabold">월요일</span></span>
+                <span class="text-slate-400">네이버 지도 다이렉트 연동</span>
             </div>
 
             <!-- 1) 배송 목적지 실시간 좌우 슬라이더 (카러셀) -->
@@ -173,7 +196,7 @@
             </div>
         </div>
 
-        <!-- ==================== 2. 배송 특이사항 (캘린더) 섹션 ==================== -->
+        <!-- ==================== [탭 3] 배송 특이사항 (캘린더) ==================== -->
         <div id="section-calendar" class="hidden flex-col gap-5">
             <div class="grid grid-cols-1 md:grid-cols-3 gap-5">
                 <div class="bg-slate-800 p-5 rounded-2xl shadow-lg border border-slate-700">
@@ -209,7 +232,7 @@
             </div>
         </div>
 
-        <!-- ==================== 3. 전체 배송지 관리 독립 섹션 ==================== -->
+        <!-- ==================== [탭 4] 전체 배송지 관리 ==================== -->
         <div id="section-places" class="hidden flex-col gap-5">
             <div class="bg-slate-800 p-5 rounded-2xl shadow-lg border border-slate-700 flex flex-col gap-3">
                 <h2 id="form-title" class="text-base font-bold text-white border-b border-slate-700 pb-2">
@@ -332,48 +355,65 @@
             changeDay('월');
         });
 
+        // 탭 전환 함수 (첫 탭: sidedish, 둘째 탭: delivery)
         function switchMainTab(tab) {
+            const sideSec = document.getElementById('section-sidedish');
             const delSec = document.getElementById('section-delivery');
             const calSec = document.getElementById('section-calendar');
             const plcSec = document.getElementById('section-places');
 
+            const sideBtn = document.getElementById('main-tab-sidedish');
             const delBtn = document.getElementById('main-tab-delivery');
             const calBtn = document.getElementById('main-tab-calendar');
             const plcBtn = document.getElementById('main-tab-places');
 
+            sideSec.classList.add('hidden');
             delSec.classList.add('hidden');
             calSec.classList.add('hidden');
             plcSec.classList.add('hidden');
 
-            delBtn.className = "flex-1 py-3 rounded-xl font-bold text-xs sm:text-sm text-center transition text-slate-400 hover:text-slate-200";
-            calBtn.className = "flex-1 py-3 rounded-xl font-bold text-xs sm:text-sm text-center transition text-slate-400 hover:text-slate-200";
-            plcBtn.className = "flex-1 py-3 rounded-xl font-bold text-xs sm:text-sm text-center transition text-slate-400 hover:text-slate-200";
+            const defaultBtnClass = "py-3 rounded-xl font-bold text-xs sm:text-sm text-center transition text-slate-400 hover:text-slate-200";
+            const activeBtnClass = "py-3 rounded-xl font-bold text-xs sm:text-sm text-center transition bg-emerald-600 text-white shadow-sm";
 
-            if (tab === 'delivery') {
+            sideBtn.className = defaultBtnClass;
+            delBtn.className = defaultBtnClass;
+            calBtn.className = defaultBtnClass;
+            plcBtn.className = defaultBtnClass;
+
+            if (tab === 'sidedish') {
+                sideSec.classList.remove('hidden');
+                sideBtn.className = activeBtnClass;
+            } else if (tab === 'delivery') {
                 delSec.classList.remove('hidden');
-                delBtn.className = "flex-1 py-3 rounded-xl font-bold text-xs sm:text-sm text-center transition bg-emerald-600 text-white shadow-sm";
+                delBtn.className = activeBtnClass;
             } else if (tab === 'calendar') {
                 calSec.classList.remove('hidden');
-                calBtn.className = "flex-1 py-3 rounded-xl font-bold text-xs sm:text-sm text-center transition bg-emerald-600 text-white shadow-sm";
+                calBtn.className = activeBtnClass;
             } else if (tab === 'places') {
                 plcSec.classList.remove('hidden');
-                plcBtn.className = "flex-1 py-3 rounded-xl font-bold text-xs sm:text-sm text-center transition bg-emerald-600 text-white shadow-sm";
+                plcBtn.className = activeBtnClass;
             }
         }
 
+        // 요일 변경 (첫 탭과 둘째 탭 버튼 동시 갱신)
         function changeDay(day) {
             currentDay = day;
-            document.querySelectorAll('.day-btn').forEach(btn => {
-                btn.className = "day-btn flex-1 py-3 rounded-xl font-bold text-sm bg-slate-800 text-slate-400 border border-slate-700 shadow-sm";
-            });
-            const activeBtn = document.getElementById(`tab-${day}`);
-            if (activeBtn) activeBtn.className = "day-btn flex-1 py-3 rounded-xl font-bold text-sm bg-emerald-600 text-white shadow-md border border-emerald-600";
 
+            ['sidedish', 'delivery'].forEach(prefix => {
+                document.querySelectorAll(`.day-btn-${prefix}`).forEach(btn => {
+                    btn.className = `day-btn-${prefix} flex-1 py-3 rounded-xl font-bold text-sm bg-slate-800 text-slate-400 border border-slate-700 shadow-sm`;
+                });
+                const activeBtn = document.getElementById(`tab-${prefix}-${day}`);
+                if (activeBtn) activeBtn.className = `day-btn-${prefix} flex-1 py-3 rounded-xl font-bold text-sm bg-emerald-600 text-white shadow-md border border-emerald-600`;
+            });
+
+            document.getElementById('current-day-banner-sidedish').textContent = `${day}요일`;
+            document.getElementById('current-day-banner-delivery').textContent = `${day}요일`;
             document.getElementById('title-day').textContent = `${day}요일`;
-            document.getElementById('current-day-banner').textContent = `${day}요일`;
-            renderDelivery();
+
             renderSideDishWidget();
             renderCertificateBoard();
+            renderDelivery();
         }
 
         function saveStoreToFirebase() { db.ref('delivery_store').set(store); }
@@ -452,15 +492,15 @@
             const list = certificateStore[currentDay] || [];
 
             if (list.length === 0) {
-                container.innerHTML = `<div class="text-center py-6 text-slate-500 text-xs">등록된 기탁서 항목이 없습니다.</div>`;
+                container.innerHTML = `<div class="text-center py-8 text-slate-500 text-xs">등록된 기탁서 항목이 없습니다.</div>`;
                 return;
             }
 
             let html = '';
             list.forEach(item => {
                 html += `
-                    <div class="flex items-center justify-between p-2 rounded-xl bg-slate-900 border border-slate-700/60 group">
-                        <label class="flex items-center gap-2.5 overflow-hidden cursor-pointer select-none">
+                    <div class="flex items-center justify-between p-2.5 rounded-xl bg-slate-900 border border-slate-700/60 group">
+                        <label class="flex items-center gap-3 overflow-hidden cursor-pointer select-none">
                             <input type="checkbox" ${item.done ? 'checked' : ''} onchange="toggleCertificateItem(${item.id})" class="w-5 h-5 rounded-md bg-slate-800 border-2 border-slate-600 text-emerald-500 focus:ring-0 focus:ring-offset-0 cursor-pointer transition">
                             <span class="text-sm font-semibold truncate ${item.done ? 'line-through text-slate-500' : 'text-slate-100'}">${item.text}</span>
                         </label>
@@ -736,7 +776,7 @@
             const doneCount = list.filter(x => x.done).length;
             const totalCount = list.length;
             const pct = totalCount > 0 ? Math.round((doneCount / totalCount) * 100) : 0;
-            document.getElementById('header-badge').textContent = `진행률: ${doneCount} / ${totalCount}건 (${pct}%)`;
+            document.getElementById('header-badge').textContent = `배송 진행률: ${doneCount} / ${totalCount}건 (${pct}%)`;
 
             // 카러셀 랜더링
             if (list.length === 0) {
