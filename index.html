@@ -299,17 +299,17 @@
 
         // 밑반찬통 로직
         function renderSideDishWidget() {
-            const data = sideDishSummary[currentDay] || { count: 8, done: false };
+            const data = sideDishSummary[currentDay] || { count: 0, done: false };
             document.getElementById('side-dish-count-display').textContent = data.count ?? 0;
             document.getElementById('side-dish-done-chk').checked = !!data.done;
         }
         function updateSideDishCount(delta) {
-            if (!sideDishSummary[currentDay]) sideDishSummary[currentDay] = { count: 8, done: false };
+            if (!sideDishSummary[currentDay]) sideDishSummary[currentDay] = { count: 0, done: false };
             sideDishSummary[currentDay].count = Math.max(0, (sideDishSummary[currentDay].count || 0) + delta);
             db.ref('side_dish_summary').set(sideDishSummary);
         }
         function toggleSideDishDone() {
-            if (!sideDishSummary[currentDay]) sideDishSummary[currentDay] = { count: 8, done: false };
+            if (!sideDishSummary[currentDay]) sideDishSummary[currentDay] = { count: 0, done: false };
             sideDishSummary[currentDay].done = document.getElementById('side-dish-done-chk').checked;
             db.ref('side_dish_summary').set(sideDishSummary);
         }
