@@ -12,11 +12,14 @@
         body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Noto Sans KR", sans-serif; }
         .carousel-container { scroll-behavior: smooth; scroll-snap-type: x mandatory; }
         .carousel-item { scroll-snap-align: start; }
+        /* 스크롤바 숨기기 */
+        .no-scrollbar::-webkit-scrollbar { display: none; }
+        .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
     </style>
 </head>
 <body class="bg-slate-900 min-h-screen text-slate-100 pb-12">
 
-    <!-- 전용 보안 PIN 입력 모달 (모바일 호환성 100%) -->
+    <!-- 전용 보안 PIN 입력 모달 -->
     <div id="auth-modal" class="fixed inset-0 bg-slate-950/95 z-50 flex items-center justify-center p-4">
         <div class="bg-slate-800 border border-slate-700 p-6 rounded-2xl max-w-xs w-full text-center shadow-2xl">
             <div class="text-3xl mb-2">🔒</div>
@@ -101,6 +104,7 @@
                 <span class="text-slate-400">네이버 지도 연동</span>
             </div>
 
+            <!-- 1) 배송 목적지 실시간 좌우 슬라이더 -->
             <div class="bg-slate-800 border-2 border-emerald-500 p-4 rounded-2xl shadow-lg flex flex-col gap-3">
                 <div class="flex justify-between items-center border-b border-slate-700 pb-2">
                     <span class="text-xs text-emerald-400 font-extrabold">📍 배송 순서별 목적지 안내</span>
@@ -110,17 +114,25 @@
                         <button type="button" onclick="scrollCarousel(1)" class="bg-slate-700 text-white font-bold px-2.5 py-1 rounded-lg text-xs">다음 ▶</button>
                     </div>
                 </div>
-                <div id="carousel-container" class="carousel-container flex overflow-x-auto gap-4 py-1"></div>
+                <div id="carousel-container" class="carousel-container flex overflow-x-auto gap-4 py-1 no-scrollbar"></div>
             </div>
 
+            <!-- 2) 비정기/조건부 기부처 특별 안내 보드 (슬라이더 적용) -->
             <div class="bg-slate-800 border-2 border-amber-500 p-4 rounded-2xl shadow-lg flex flex-col gap-3">
                 <div class="flex justify-between items-center border-b border-slate-700 pb-2">
-                    <span class="text-xs text-amber-400 font-extrabold">⭐ 비정기 및 조건부 기부처 특별 안내</span>
-                    <span class="text-[11px] text-slate-400">전체 공유됨</span>
+                    <span class="text-xs text-amber-400 font-extrabold">⭐ 비정기 및 조건부 기부처 특별 안내 (체크된 항목만 표시)</span>
+                    <div class="flex items-center gap-2">
+                        <span id="irregular-carousel-indicator" class="text-xs text-slate-400 font-bold">0 / 0</span>
+                        <button type="button" onclick="scrollIrregularCarousel(-1)" class="bg-slate-700 text-white font-bold px-2.5 py-1 rounded-lg text-xs">◀ 이전</button>
+                        <button type="button" onclick="scrollIrregularCarousel(1)" class="bg-slate-700 text-white font-bold px-2.5 py-1 rounded-lg text-xs">다음 ▶</button>
+                    </div>
                 </div>
-                <div id="irregular-board-container" class="grid grid-cols-1 md:grid-cols-2 gap-3"></div>
+                <div id="irregular-carousel-container" class="carousel-container flex overflow-x-auto gap-4 py-1 no-scrollbar">
+                    <div class="text-center py-4 text-slate-400 text-xs w-full">오늘 활성화된 비정기 기부처가 없습니다. [전체 배송지 관리]에서 체크해 보세요!</div>
+                </div>
             </div>
 
+            <!-- 3) 요일별 상세 배송 목록 -->
             <div class="bg-slate-800 p-5 rounded-2xl shadow-lg border border-slate-700">
                 <div class="flex justify-between items-center border-b border-slate-700 pb-2 mb-4">
                     <h2 class="text-base font-bold text-white">📋 <span id="title-day" class="text-emerald-400">월요일</span> 상세 배송 목록 (<span id="count-num">0</span>건)</h2>
@@ -203,7 +215,6 @@
         const auth = firebase.auth();
         const db = firebase.database();
 
-        // 기관 통일 비밀번호 설정
         const APP_PASSWORD = "7727";
         const DAYS = ['월', '화', '수', '목', '금'];
 
@@ -219,7 +230,6 @@
         let calYear = today.getFullYear(), calMonth = today.getMonth();
         let selectedDateStr = `${calYear}-${String(calMonth + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`;
 
-        // 요일 탭 버튼 동적 생성 (HTML 코드 경량화)
         function initDayButtons() {
             ['sidedish', 'delivery'].forEach(type => {
                 document.getElementById(`day-tabs-${type}`).innerHTML = DAYS.map(d =>
@@ -228,7 +238,6 @@
             });
         }
 
-        // PIN 입력 모달 제출 처리
         function handlePinSubmit(e) {
             e.preventDefault();
             const val = document.getElementById('pin-input').value.trim();
@@ -242,7 +251,6 @@
             }
         }
 
-        // Firebase 익명 인증 완료 후 데이터베이스 연결 (새로고침 버그 완벽 해결)
         async function connectFirebaseAndLoad() {
             document.getElementById('auth-modal').classList.add('hidden');
             try {
@@ -254,7 +262,7 @@
             db.ref('delivery_store').on('value', snap => { store = snap.val() || {}; renderDelivery(); });
             db.ref('side_dish_summary').on('value', snap => { if (snap.val()) Object.assign(sideDishSummary, snap.val()); renderSideDishWidget(); });
             db.ref('certificate_store').on('value', snap => { certificateStore = snap.val() || {}; renderCertificateBoard(); });
-            db.ref('irregular_store').on('value', snap => { irregularStore = snap.val() || []; renderIrregularBoard(); });
+            db.ref('irregular_store').on('value', snap => { irregularStore = snap.val() || []; renderIrregularBoard(); renderRegisteredPlaces(); });
             db.ref('registered_places').on('value', snap => { registeredPlaces = snap.val() || []; renderRegisteredPlaces(); });
             db.ref('calendar_notes').on('value', snap => { calendarNotes = snap.val() || {}; renderCalendar(); selectCalendarDate(selectedDateStr); });
 
@@ -295,6 +303,7 @@
             renderSideDishWidget();
             renderCertificateBoard();
             renderDelivery();
+            renderIrregularBoard();
         }
 
         // 밑반찬통 로직
@@ -362,9 +371,12 @@
 
             if (editId) {
                 const idx = registeredPlaces.findIndex(x => x.id == editId);
-                if (idx !== -1) registeredPlaces[idx] = { id: Number(editId), name, address, phone, item };
+                if (idx !== -1) {
+                    const oldActive = registeredPlaces[idx].active || false;
+                    registeredPlaces[idx] = { id: Number(editId), name, address, phone, item, active: oldActive };
+                }
             } else {
-                registeredPlaces.push({ id: Date.now(), name, address, phone, item });
+                registeredPlaces.push({ id: Date.now(), name, address, phone, item, active: false });
             }
             db.ref('registered_places').set(registeredPlaces);
             cancelEditMode();
@@ -396,18 +408,11 @@
             db.ref('delivery_store').set(store);
             alert(`'${p.name}' 배송지가 ${day}요일에 배정되었습니다.`);
         }
-        function addPlaceToIrregular(id) {
+        function togglePlaceActive(id) {
             const p = registeredPlaces.find(x => x.id == id);
             if (!p) return;
-            irregularStore.push({ id: Date.now(), name: p.name, address: p.address, phone: p.phone, rule: p.item });
-            db.ref('irregular_store').set(irregularStore);
-            alert(`'${p.name}' 기부처가 비정기 보드에 추가되었습니다.`);
-        }
-        function deleteIrregularItem(id) {
-            if (confirm('비정기 보드에서 삭제하시겠습니까?')) {
-                irregularStore = irregularStore.filter(x => x.id !== id);
-                db.ref('irregular_store').set(irregularStore);
-            }
+            p.active = !p.active;
+            db.ref('registered_places').set(registeredPlaces);
         }
         function deleteRegisteredPlace(id) {
             if (confirm('목록에서 완전히 삭제하시겠습니까?')) {
@@ -415,36 +420,46 @@
                 db.ref('registered_places').set(registeredPlaces);
             }
         }
+
+        // 비정기 기부처 보드 렌더링 (체크된 항목만 슬라이더로 표시)
         function renderIrregularBoard() {
-            const c = document.getElementById('irregular-board-container');
-            if (!irregularStore.length) {
-                c.innerHTML = `<div class="text-center py-4 text-slate-400 text-xs col-span-2">등록된 비정기 기부처가 없습니다.</div>`;
+            const container = document.getElementById('irregular-carousel-container');
+            const activeList = registeredPlaces.filter(p => p.active);
+
+            if (!activeList.length) {
+                container.innerHTML = `<div class="text-center py-6 text-slate-400 text-xs w-full">오늘 활성화된 비정기 기부처가 없습니다. [전체 배송지 관리]에서 체크해 보세요!</div>`;
+                document.getElementById('irregular-carousel-indicator').textContent = '0 / 0';
                 return;
             }
-            c.innerHTML = irregularStore.map(item => `
-                <div class="p-3 bg-slate-900 border border-amber-600 rounded-xl flex flex-col justify-between gap-2">
+
+            document.getElementById('irregular-carousel-indicator').textContent = `전체 ${activeList.length}곳`;
+            container.innerHTML = activeList.map(item => `
+                <div class="carousel-item min-w-[85%] sm:min-w-[45%] bg-slate-900 border border-amber-600 p-3.5 rounded-xl flex flex-col justify-between gap-2 flex-shrink-0 shadow-sm">
                     <div>
                         <div class="flex justify-between items-center mb-1">
                             <span class="text-[11px] font-extrabold text-amber-400">⭐ 비정기/조건부</span>
-                            <button type="button" onclick="deleteIrregularItem(${item.id})" class="text-[11px] text-rose-400 font-bold px-1">✕ 삭제</button>
+                            <span class="text-[11px] text-emerald-400 font-bold">✓ 활성화됨</span>
                         </div>
                         <h3 class="text-sm font-bold text-white truncate">${item.name}</h3>
-                        <p class="text-xs text-amber-200 mt-0.5">📌 규칙: ${item.rule}</p>
+                        <p class="text-xs text-amber-200 mt-0.5 truncate">📌 규칙: ${item.item}</p>
                         <p class="text-xs text-slate-400 truncate">📍 ${item.address} | 📞 ${item.phone}</p>
                     </div>
-                    <button type="button" onclick="openNaverNavi('${item.address}')" class="w-full bg-green-600 hover:bg-green-500 text-white font-bold text-xs py-2 rounded-lg">🗺️ 네이버 지도 길안내</button>
+                    <button type="button" onclick="openNaverNavi('${item.address}')" class="w-full bg-green-600 hover:bg-green-500 text-white font-bold text-xs py-2 rounded-lg transition shadow flex items-center justify-center gap-1">
+                        🗺️ 네이버 지도 길안내
+                    </button>
                 </div>
             `).join('');
         }
+
         function renderRegisteredPlaces() {
-            const c = document.getElementById('registered-places-container');
+            const container = document.getElementById('registered-places-container');
             document.getElementById('total-places-count').textContent = registeredPlaces.length;
             if (!registeredPlaces.length) {
-                c.innerHTML = `<div class="text-center py-8 text-slate-400 text-xs col-span-2">등록된 배송지가 없습니다.</div>`;
+                container.innerHTML = `<div class="text-center py-8 text-slate-400 text-xs col-span-2">등록된 배송지가 없습니다.</div>`;
                 return;
             }
-            c.innerHTML = registeredPlaces.map(p => `
-                <div class="p-3 bg-slate-900 border border-slate-700 rounded-xl flex flex-col gap-2">
+            container.innerHTML = registeredPlaces.map(p => `
+                <div class="p-3 bg-slate-900 border ${p.active ? 'border-amber-500' : 'border-slate-700'} rounded-xl flex flex-col gap-2 shadow-sm">
                     <div class="flex justify-between items-start">
                         <div class="overflow-hidden">
                             <h4 class="font-bold text-xs text-white truncate">${p.name}</h4>
@@ -463,10 +478,14 @@
                                 ${DAYS.map(d => `<button type="button" onclick="addPlaceToDay(${p.id}, '${d}')" class="bg-emerald-950 hover:bg-emerald-600 text-emerald-400 font-bold text-xs px-2 py-0.5 rounded border border-emerald-700">${d}</button>`).join('')}
                             </div>
                         </div>
-                        <button type="button" onclick="addPlaceToIrregular(${p.id})" class="w-full bg-amber-950 hover:bg-amber-600 text-amber-400 hover:text-white font-bold text-xs py-1.5 rounded border border-amber-700">⭐ 비정기 특별 안내 보드에 띄우기</button>
+                        <label class="flex items-center justify-between bg-slate-950 p-2 rounded-lg border border-slate-800 cursor-pointer select-none">
+                            <span class="text-[11px] font-bold ${p.active ? 'text-amber-400' : 'text-slate-400'}">⭐ 비정기 보드 상시 띄우기 (활성화)</span>
+                            <input type="checkbox" ${p.active ? 'checked' : ''} onchange="togglePlaceActive(${p.id})" class="w-4 h-4 rounded bg-slate-900 border-slate-600 text-amber-500 cursor-pointer">
+                        </label>
                     </div>
                 </div>
             `).join('');
+            renderIrregularBoard();
         }
 
         // 배송 목록 제어
@@ -512,6 +531,10 @@
         function openNaverNavi(addr) { window.open(`https://map.naver.com/v5/search/${encodeURIComponent(addr)}`, '_blank'); }
         function scrollCarousel(dir) {
             const c = document.getElementById('carousel-container');
+            if (c) c.scrollBy({ left: dir * (c.clientWidth * 0.85), behavior: 'smooth' });
+        }
+        function scrollIrregularCarousel(dir) {
+            const c = document.getElementById('irregular-carousel-container');
             if (c) c.scrollBy({ left: dir * (c.clientWidth * 0.85), behavior: 'smooth' });
         }
 
