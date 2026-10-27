@@ -12,6 +12,8 @@
     <!-- Firebase SDK (v9 호환 모듈) -->
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
+    <!-- Firebase Auth SDK -->
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
 
     <style>
         body { font-family: 'Pretendard', sans-serif; }
@@ -70,7 +72,7 @@
             <!-- 요일 타이틀 배너 -->
             <div class="bg-slate-800 border border-slate-700 px-4 py-2.5 rounded-xl flex justify-between items-center text-xs">
                 <span class="font-bold text-emerald-400">📅 현재 요일: <span id="current-day-banner-sidedish" class="text-white text-sm font-extrabold">월요일</span></span>
-                <span class="text-slate-400">전직원 실시간 동기화 중</span>
+                <span class="text-slate-400">보안 인증 연결됨</span>
             </div>
 
             <!-- 밑반찬통 & 기탁서 좌우 2분할 카드 -->
@@ -295,7 +297,11 @@
         };
 
         firebase.initializeApp(firebaseConfig);
+        const auth = firebase.auth();
         const db = firebase.database();
+
+        // 내부 인증용 PIN 비밀번호 (필요에 따라 변경 가능)
+        const APP_PASSWORD = "1234";
 
         let store = { '월': [], '화': [], '수': [], '목': [], '금': [] };
         let sideDishSummary = {
@@ -316,7 +322,39 @@
         let calMonth = today.getMonth();
         let selectedDateStr = formatDate(today.getFullYear(), today.getMonth() + 1, today.getDate());
 
+        // 내부 비밀번호 검증 및 Firebase 익명 로그인
+        function checkAccessAuth() {
+            let savedPass = localStorage.getItem('foodbank_auth_pass');
+            
+            if (savedPass !== APP_PASSWORD) {
+                savedPass = prompt("나주시 기초푸드뱅크 내부 인증 비밀번호를 입력하세요:");
+                if (savedPass === APP_PASSWORD) {
+                    localStorage.setItem('foodbank_auth_pass', savedPass);
+                } else {
+                    alert("비밀번호가 올바르지 않아 접근이 차단됩니다.");
+                    document.body.innerHTML = `
+                        <div class="flex flex-col items-center justify-center min-h-screen text-center p-6">
+                            <h2 class="text-2xl font-bold text-rose-500 mb-2">접근 권한이 없습니다</h2>
+                            <p class="text-slate-400 text-sm mb-4">올바른 비밀번호를 입력해야 시스템을 이용할 수 있습니다.</p>
+                            <button onclick="location.reload()" class="bg-slate-800 border border-slate-700 px-4 py-2 rounded-xl text-xs font-bold text-white hover:bg-slate-700">다시 시도</button>
+                        </div>
+                    `;
+                    return false;
+                }
+            }
+
+            // Firebase 익명 인증 수행
+            auth.signInAnonymously().catch((error) => {
+                console.error("Firebase 보안 인증 실패:", error);
+            });
+
+            return true;
+        }
+
         window.addEventListener('DOMContentLoaded', () => {
+            // 인증 검사 수행 (실패 시 데이터 연동 중단)
+            if (!checkAccessAuth()) return;
+
             db.ref('delivery_store').on('value', (snapshot) => {
                 store = snapshot.val() || { '월': [], '화': [], '수': [], '목': [], '금': [] };
                 renderDelivery();
@@ -355,7 +393,7 @@
             changeDay('월');
         });
 
-        // 탭 전환 함수 (첫 탭: sidedish, 둘째 탭: delivery)
+        // 탭 전환 함수
         function switchMainTab(tab) {
             const sideSec = document.getElementById('section-sidedish');
             const delSec = document.getElementById('section-delivery');
